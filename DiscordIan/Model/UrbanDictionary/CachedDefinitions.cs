@@ -6,6 +6,7 @@ namespace DiscordIan.Model.UrbanDictionary
     {
         public DateTime CreatedAt { get; set; }
         public int LastViewedDefinition { get; set; }
+        public int LastViewedPage { get; set; }
         public UrbanDefinition[] List { get; set; }
     }
 }

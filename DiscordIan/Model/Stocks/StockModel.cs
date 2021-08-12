@@ -37,7 +37,7 @@ namespace DiscordIan.Model.Stocks
         public string Currency { get; set; }
         public string Exchange { get; set; }
         public string FinnhubIndustry { get; set; }
-        public DateTimeOffset Ipo { get; set; }
+        public string Ipo { get; set; }
         public Uri Logo { get; set; }
         public double MarketCapitalization { get; set; }
         public string Name { get; set; }

@@ -14,10 +14,19 @@
         public string IanUrbanDictionaryEndpoint { get; set; }
         public string IanUrbanDictionarySwap { get; set; }
         public string IanOmdbEndpoint { get; set; }
+        public string IanOmdbExactEndpoint { get; set; }
+        public string IanOmdbSearchEndpoint { get; set; }
         public string IanOmdbKey { get; set; }
         public string IanImdbIdUrl { get; set; }
         public string IanStockKey { get; set; }
         public string IanStockCompanyEndpoint { get; set; }
         public string IanStockQuoteEndpoint { get; set; }
+        public string IanJerkCityEndpoint { get; set; }
+        public string IanJerkCityRandomEndpoint { get; set; }
+        public string IanGameSummaryEndpoint { get; set; }
+        public string IanGameDetailEndpoint { get; set; }
+        public string IanGameKey { get; set; }
+        public string IanBooksEndpoint { get; set; }
+        public string IanBooksKey { get; set; }
     }
 }

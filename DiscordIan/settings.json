@@ -5,11 +5,18 @@
   "IanOpenWeatherMapEndpointCoords": "http://api.openweathermap.org/data/2.5/weather?units=imperial&lat={0}&lon={1}&appid={2}&mode=xml",
   "IanOpenWeatherMapEndpointForecast": "http://api.openweathermap.org/data/2.5/onecall?units=imperial&lat={0}&lon={1}&appid={2}",
   "IanOpenWeatherMapEndpointQ": "http://api.openweathermap.org/data/2.5/weather?units=imperial&q={0}&appid={1}&mode=xml",
-  "IanUrbanDictionaryEndpoint": "http://api.urbandictionary.com/v0/define?term={0}",
-  "IanOmdbEndpoint": "http://www.omdbapi.com/?t={0}&apikey={1}",
+  "IanUrbanDictionaryEndpoint": "http://api.urbandictionary.com/v0/define?term={0}&page={1}",
+  "IanOmdbSearchEndpoint": "http://www.omdbapi.com/?s={0}&apikey={1}",
+  "IanOmdbExactEndpoint": "http://www.omdbapi.com/?t={0}&apikey={1}",
+  "IanOmdbEndpoint": "http://www.omdbapi.com/?i={0}&apikey={1}",
   "IanImdbIdUrl": "https://www.imdb.com/title/{0}/",
   "IanStockCompanyEndpoint": "https://finnhub.io/api/v1/stock/profile2?symbol={0}&token={1}",
   "IanStockQuoteEndpoint": "https://finnhub.io/api/v1/quote?symbol={0}&token={1}",
+  "IanJerkCityEndpoint": "https://www.bonequest.com/api/v2/search/?q=\"{0}\"",
+  "IanJerkCityRandomEndpoint": "https://www.bonequest.com/api/v2/quote/random",
+  "IanGameSummaryEndpoint": "https://api.rawg.io/api/games?page_size=1&search={0}&key={1}",
+  "IanGameDetailEndpoint": "https://api.rawg.io/api/games/{0}?key={1}",
+  "IanBooksEndpoint": "https://www.googleapis.com/books/v1/volumes?q={0}&key={1}",
   "Serilog": {
     "WriteTo": [
       {

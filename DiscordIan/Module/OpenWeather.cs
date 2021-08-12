@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Globalization;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
@@ -19,6 +18,7 @@ namespace DiscordIan.Module
         private readonly IDistributedCache _cache;
         private readonly FetchService _fetchService;
         private readonly Model.Options _options;
+        private TimeSpan apiTiming = new TimeSpan();
 
         public OpenWeather(IDistributedCache cache,
             FetchService fetchService,
@@ -58,17 +58,9 @@ namespace DiscordIan.Module
 
                     if (!string.IsNullOrEmpty(coords) && !string.IsNullOrEmpty(locale))
                     {
-                        await _cache.SetStringAsync(location, coords,
-                            new DistributedCacheEntryOptions
-                            {
-                                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4)
-                            });
+                        await _cache.SetStringAsync(location, coords);
 
-                        await _cache.SetStringAsync(coords, locale,
-                            new DistributedCacheEntryOptions
-                            {
-                                AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4)
-                            });
+                        await _cache.SetStringAsync(coords, locale);
                     }
                 }
                 catch (Exception)
@@ -95,8 +87,10 @@ namespace DiscordIan.Module
             }
             else
             {
-                await ReplyAsync(message, false, embed);
+                await ReplyAsync(message.WordSwap(_cache), false, embed);
             }
+
+            HistoryAdd(_cache, GetType().Name, location, apiTiming);
         }
 
         private async Task<(string, Discord.Embed)>
@@ -119,6 +113,7 @@ namespace DiscordIan.Module
 
             var responseCurrent = await _fetchService
                 .GetAsync<WeatherCurrent.Current>(uriCurrent, headers);
+            apiTiming += responseCurrent.Elapsed;
 
             if (responseCurrent.IsSuccessful)
             {
@@ -127,6 +122,7 @@ namespace DiscordIan.Module
 
                 var responseForecast = await _fetchService
                     .GetAsync<WeatherForecast.Forecast>(uriForecast, headers);
+                apiTiming += responseForecast.Elapsed;
 
                 if (responseForecast.IsSuccessful)
                 {
@@ -163,6 +159,7 @@ namespace DiscordIan.Module
 
             var response = await _fetchService
                 .GetAsync<WeatherCurrent.Current>(uri, headers);
+            apiTiming += response.Elapsed;
 
             if (response.IsSuccessful)
             {
@@ -205,6 +202,7 @@ namespace DiscordIan.Module
                 _options.IanMapQuestKey));
 
             var response = await _fetchService.GetAsync<MapQuest>(uri);
+            apiTiming += response.Elapsed;
 
             if (response.IsSuccessful)
             {

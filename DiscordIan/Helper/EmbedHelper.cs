@@ -3,7 +3,7 @@ using Discord;
 
 namespace DiscordIan.Helper
 {
-    public static class EmbedFormat
+    public static class EmbedHelper
     {
         public static EmbedFieldBuilder MakeField(string name, string value, bool inLine = false)
         {

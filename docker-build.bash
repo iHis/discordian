@@ -121,6 +121,7 @@ echo "=== Image version: $BLD_VERSION"
 
 if [[ $BLD_PUBLISH = true ]]; then
   docker build -f "$BLD_DOCKERFILE" -t "$BLD_FULL_DOCKER_IMAGE" \
+    --network host \
     --build-arg BRANCH="$BLD_BRANCH" \
     --build-arg IMAGE_CREATED="$BLD_DATE" \
     --build-arg IMAGE_REVISION="$BLD_COMMIT" \
@@ -138,8 +139,10 @@ if [[ $BLD_PUBLISH = true ]]; then
       docker login -u "$BLD_DOCKER_USERNAME" --password-stdin "$BLD_DOCKER_HOST" || exit $?
     fi
 
+    docker tag "$BLD_FULL_DOCKER_IMAGE" "${BLD_DOCKER_USERNAME}/${BLD_FULL_DOCKER_IMAGE}"
+
     echo "=== Pushing image $BLD_FULL_DOCKER_IMAGE"
-    docker push "$BLD_FULL_DOCKER_IMAGE"
+    docker push "${BLD_DOCKER_USERNAME}/${BLD_FULL_DOCKER_IMAGE}"
 
     echo "=== Executing logout"
     if [[ -z $BLD_DOCKER_HOST ]]; then
@@ -151,7 +154,7 @@ if [[ $BLD_PUBLISH = true ]]; then
     fi
   fi
 else
-  docker build -f "$BLD_DOCKERFILE" -t "$BLD_FULL_DOCKER_IMAGE" --target build-stage .
+  docker build -f "$BLD_DOCKERFILE" -t "$BLD_FULL_DOCKER_IMAGE" --network host --target build-stage .
   echo '=== Not pushing Docker image: branch is not master, develop, or versioned release'
 fi
 

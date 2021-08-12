@@ -1,11 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Drawing;
 using System.IO;
 using System.Net.Http;
 using System.Text.Json;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
+using DiscordIan.Helper;
 using DiscordIan.Model;
 using Microsoft.Extensions.Logging;
 
@@ -52,7 +54,7 @@ namespace DiscordIan.Service
                     response.Elapsed = stopwatch.Elapsed;
                     response.Message = $"HTTP status code {httpResult.StatusCode}";
                 }
-
+                //var test = httpResult.Content.ReadAsStringAsync().Result;
                 response.Data = await DeserializeObjectAsync<T>(
                     httpResult.Content);
                 response.IsSuccessful = true;
@@ -62,6 +64,38 @@ namespace DiscordIan.Service
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Fetch errored trying to fetch {RequestURI}: {ErrorMessage}",
+                    requestUri,
+                    ex.Message);
+                response.IsSuccessful = false;
+                response.Message = ex.Message;
+                response.Elapsed = stopwatch.Elapsed;
+                return response;
+            }
+        }
+
+        public async Task<Response<Bitmap>> GetImageAsync(Uri requestUri)
+        {
+            var stopwatch = Stopwatch.StartNew();
+            var response = new Response<Bitmap>();
+            try
+            {
+                var imageResult = await ImageHelper.GetImageFromURI(requestUri);
+                if (imageResult == null)
+                {
+                    _logger.LogWarning("Image Fetch failed.");
+                    response.IsSuccessful = false;
+                    response.Elapsed = stopwatch.Elapsed;
+                    response.Message = "Image Fetch failed.";
+                }
+                //var test = httpResult.Content.ReadAsStringAsync().Result;
+                response.Data = imageResult;
+                response.IsSuccessful = true;
+                response.Elapsed = stopwatch.Elapsed;
+                return response;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Image Fetch errored trying to fetch {RequestURI}: {ErrorMessage}",
                     requestUri,
                     ex.Message);
                 response.IsSuccessful = false;

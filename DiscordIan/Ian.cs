@@ -1,4 +1,8 @@
 ﻿using System;
+using System.Diagnostics;
+using System.Net;
+using System.Net.Http;
+using System.Net.Security;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -110,9 +114,30 @@ namespace DiscordIan
             services.AddTransient<FetchService>();
 
             // system services
-            services.AddTransient<System.Net.Http.HttpClient>();
+            services.AddTransient(x => new HttpClient(BuildHTTPHandler()));
 
             return services.BuildServiceProvider();
+        }
+
+        private static HttpClientHandler BuildHTTPHandler()
+        {
+            var handler = new HttpClientHandler();
+
+            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => {
+                if (policyErrors == SslPolicyErrors.None)
+                {
+                    return true;
+                }
+
+                if (cert.GetCertHashString() == "12CBB66DF711F3E96A181BA6CEDF3320341E5073")
+                {
+                    return true;
+                }
+
+                return false;
+            };
+
+            return handler;
         }
 
         private static Task LogAsync(LogMessage logMessage)

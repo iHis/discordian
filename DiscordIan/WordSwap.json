@@ -1,0 +1,8 @@
+{
+  "SwapList": [
+    {
+      "inbound": "inword",
+      "outbound": "outword"
+    }
+  ]
+}

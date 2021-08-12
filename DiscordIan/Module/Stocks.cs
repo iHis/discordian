@@ -9,6 +9,7 @@ using DiscordIan.Model.Stocks;
 using DiscordIan.Service;
 using DiscordIan.Helper;
 using Microsoft.Extensions.Options;
+using Microsoft.Extensions.Caching.Distributed;
 
 namespace DiscordIan.Module
 {
@@ -16,14 +17,19 @@ namespace DiscordIan.Module
     {
         private readonly FetchService _fetchService;
         private readonly Model.Options _options;
+        private readonly IDistributedCache _cache;
+        private TimeSpan apiTiming = new TimeSpan();
 
         public Stock(FetchService fetchService,
-            IOptionsMonitor<Model.Options> optionsAccessor)
+            IOptionsMonitor<Model.Options> optionsAccessor,
+            IDistributedCache cache)
         {
             _fetchService = fetchService
                 ?? throw new ArgumentNullException(nameof(fetchService));
             _options = optionsAccessor.CurrentValue
                 ?? throw new ArgumentNullException(nameof(optionsAccessor));
+            _cache = cache
+                ?? throw new ArgumentNullException(nameof(cache));
         }
 
         [Command("quote", RunMode = RunMode.Async)]
@@ -60,6 +66,8 @@ namespace DiscordIan.Module
                     false,
                     FormatStockResponse(stockResponse));
             }
+
+            HistoryAdd(_cache, GetType().Name, input, apiTiming);
         }
 
         private async Task<StockModel> GetQuoteAsync(string input)
@@ -78,6 +86,7 @@ namespace DiscordIan.Module
                 _options.IanStockKey));
 
             var responseCompany = await _fetchService.GetAsync<StockCompany>(uriCompany, headers);
+            apiTiming += responseCompany.Elapsed;
 
             if (responseCompany.IsSuccessful)
             {
@@ -98,6 +107,7 @@ namespace DiscordIan.Module
                 }
 
                 var responseQuote = await _fetchService.GetAsync<StockQuote>(uriQuote, headers);
+                apiTiming += responseQuote.Elapsed;
 
                 if (responseQuote.IsSuccessful)
                 {
@@ -143,21 +153,21 @@ namespace DiscordIan.Module
                 Url = Company?.Weburl.ValidateUri(),
                 ThumbnailUrl = Company?.Logo.ValidateUri(),
                 Fields = new List<EmbedFieldBuilder>() {
-                    EmbedFormat.MakeField("Price:", 
+                    EmbedHelper.MakeField("Price:", 
                         Quote.Current.ToString()),
-                    EmbedFormat.MakeField("Prev Close:", 
+                    EmbedHelper.MakeField("Prev Close:", 
                         Quote.PreviousClose.ToString(), 
                         true),
-                    EmbedFormat.MakeField("Low:", 
+                    EmbedHelper.MakeField("Low:", 
                         Quote.Low.ToString(), 
                         true),
-                    EmbedFormat.MakeField("High:", 
+                    EmbedHelper.MakeField("High:", 
                         Quote.High.ToString(), 
                         true),
-                    EmbedFormat.MakeField("Change:", 
+                    EmbedHelper.MakeField("Change:", 
                         changeString),
-                    EmbedFormat.MakeField("Updated:", 
-                        DateFormat.UnixTimeToDate(Quote.Timestamp))
+                    EmbedHelper.MakeField("Updated:", 
+                        DateHelper.UnixTimeToDate(Quote.Timestamp))
                 }
             }.Build();
         }
