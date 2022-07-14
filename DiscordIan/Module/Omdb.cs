@@ -45,6 +45,7 @@ namespace DiscordIan.Module
 
         [Command("rtexact", RunMode = RunMode.Async)]
         [Summary("Look up movie/tv ratings, exact title")]
+        [Alias("rte")]
         public async Task ExactAsync([Remainder]
             [Summary("Exact name of movie/show")] string input)
         {
@@ -62,10 +63,9 @@ namespace DiscordIan.Module
         public async Task CurrentAsync([Remainder]
             [Summary("Name of movie/show")] string input)
         {
-            var year = ParseInputForYear(ref input);
-            var movieResponse = string.IsNullOrEmpty(year) ?
-                await SearchMovieAsync(input)
-                : await GetExactMovieAsync(input) ?? await SearchMovieAsync(input);
+            var movieResponse = Regex.IsMatch(input, "\\([0-9][0-9][0-9][0-9]\\)$") ?
+                await GetExactMovieAsync(input) ?? await SearchMovieAsync(input)
+                : await SearchMovieAsync(input);
 
             await ReplyAsync(null,
                     false,
@@ -76,11 +76,12 @@ namespace DiscordIan.Module
 
         [Command("rtnext", RunMode = RunMode.Async)]
         [Summary("Look up next movie/tv ratings")]
+        [Alias("rtn")]
         public async Task NextAsync()
         {
             var cachedResponse = await _cache.GetStringAsync(CacheKey);
 
-            if (cachedResponse?.Length == 0)
+            if (cachedResponse?.Length == 0 || cachedResponse == null)
             {
                 await ReplyAsync("No movies queued.");
             }
