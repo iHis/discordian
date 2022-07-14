@@ -48,39 +48,7 @@ namespace DiscordIan.Module
         public async Task ExactAsync([Remainder]
             [Summary("Exact name of movie/show")] string input)
         {
-            string cachedMovie = await _cache.GetStringAsync(
-                string.Format(Cache.Omdb, input.Trim()));
-            Movie movieResponse;
-            var year = ParseInputForYear(ref input);
-
-            if (string.IsNullOrEmpty(cachedMovie))
-            {
-                try
-                {
-                    var endpoint = _options.IanOmdbExactEndpoint;
-
-                    if (!string.IsNullOrEmpty(year))
-                    {
-                        endpoint += $"&y={year}";
-                    }
-
-                    movieResponse = await GetMovieAsync(input, endpoint);
-                }
-                catch (Exception ex)
-                {
-                    await ReplyAsync($"Error! {ex.Message}");
-                    return;
-                }
-            }
-            else
-            {
-                movieResponse = JsonSerializer.Deserialize<Movie>(
-                    cachedMovie,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-            }
+            var movieResponse = await GetExactMovieAsync(input);
 
             await ReplyAsync(null,
                 false,
@@ -94,79 +62,14 @@ namespace DiscordIan.Module
         public async Task CurrentAsync([Remainder]
             [Summary("Name of movie/show")] string input)
         {
-            string cachedResponse = await _cache.GetStringAsync(
-                string.Format(Cache.OmdbStubs, input.Trim()));
-            OmdbStub stubResponse;
+            var year = ParseInputForYear(ref input);
+            var movieResponse = string.IsNullOrEmpty(year) ?
+                await SearchMovieAsync(input)
+                : await GetExactMovieAsync(input) ?? await SearchMovieAsync(input);
 
-            if (string.IsNullOrEmpty(cachedResponse))
-            {
-                try
-                {
-                    stubResponse = await GetStubsAsync(input);
-                }
-                catch (Exception ex)
-                {
-                    await ReplyAsync($"Error! {ex.Message}");
-                    return;
-                }
-            }
-            else
-            {
-                var cacheStub = JsonSerializer.Deserialize<CachedMovies>(
-                    cachedResponse,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                stubResponse = cacheStub.MovieStubs;
-            }
-
-            if (stubResponse?.Response != "True")
-            {
-                if (!string.IsNullOrEmpty(stubResponse?.Error))
-                {
-                    await ReplyAsync(stubResponse.Error);
-                }
-                else
-                {
-                    await ReplyAsync("No results found, sorry!");
-                }
-            }
-            else
-            {
-                var imdbID = stubResponse.Search[0].imdbID;
-                Movie movieResponse;
-
-                string cachedMovie = await _cache.GetStringAsync(
-                    string.Format(Cache.Omdb, imdbID.Trim()));
-
-                if (string.IsNullOrEmpty(cachedMovie))
-                {
-                    try
-                    {
-                        movieResponse = await GetMovieAsync(imdbID, _options.IanOmdbEndpoint);
-                    }
-                    catch (Exception ex)
-                    {
-                        await ReplyAsync($"Error! {ex.Message}");
-                        return;
-                    }
-                }
-                else
-                {
-                    movieResponse = JsonSerializer.Deserialize<Movie>(
-                        cachedMovie,
-                        new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
-                }
-
-                await ReplyAsync(null,
+            await ReplyAsync(null,
                     false,
                     FormatOmdbResponse(movieResponse));
-            }
 
             HistoryAdd(_cache, GetType().Name, input, apiTiming);
         }
@@ -192,7 +95,7 @@ namespace DiscordIan.Module
                     await _cache.SetStringAsync(CacheKey,
                         JsonSerializer.Serialize(cached));
 
-                    var movieResponse = await GetMovieAsync(cached.MovieStubs.Search[cached.LastViewedMovie].imdbID, _options.IanOmdbEndpoint);
+                    var movieResponse = await CallOMDB(cached.MovieStubs.Search[cached.LastViewedMovie].imdbID, _options.IanOmdbEndpoint);
 
                     await ReplyAsync(null,
                         false,
@@ -207,6 +110,115 @@ namespace DiscordIan.Module
                 HistoryAdd(_cache, GetType().Name, "n/a", apiTiming);
             }
         }
+
+        private async Task<Movie> GetExactMovieAsync(string input)
+        {
+            string cachedMovie = await _cache.GetStringAsync(
+                string.Format(Cache.Omdb, input.Trim()));
+            Movie movieResponse;
+            var year = ParseInputForYear(ref input);
+
+            if (string.IsNullOrEmpty(cachedMovie))
+            {
+                var endpoint = _options.IanOmdbExactEndpoint;
+
+                if (!string.IsNullOrEmpty(year))
+                {
+                    endpoint += $"&y={year}";
+                }
+
+                movieResponse = await CallOMDB(input, endpoint);
+            }
+            else
+            {
+                movieResponse = JsonSerializer.Deserialize<Movie>(
+                    cachedMovie,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+            }
+
+            return movieResponse;
+        }
+
+        private async Task<Movie> SearchMovieAsync(string input)
+        {
+            var cachedResponse = await _cache.GetStringAsync(
+                string.Format(Cache.OmdbStubs, input.Trim()));
+            OmdbStub stubResponse;
+
+            if (string.IsNullOrEmpty(cachedResponse))
+            {
+                try
+                {
+                    stubResponse = await GetStubsAsync(input);
+                }
+                catch (Exception ex)
+                {
+                    await ReplyAsync($"Error! {ex.Message}");
+                    return null;
+                }
+            }
+            else
+            {
+                var cacheStub = JsonSerializer.Deserialize<CachedMovies>(
+                    cachedResponse,
+                    new JsonSerializerOptions
+                    {
+                        PropertyNameCaseInsensitive = true
+                    });
+
+                stubResponse = cacheStub.MovieStubs;
+            }
+
+            if (stubResponse?.Response != "True")
+            {
+                if (!string.IsNullOrEmpty(stubResponse?.Error))
+                {
+                    await ReplyAsync(stubResponse.Error);
+                    return null;
+                }
+                else
+                {
+                    await ReplyAsync("No results found, sorry!");
+                    return null;
+                }
+            }
+            else
+            {
+                Movie movieResponse;
+                var imdbID = stubResponse.Search[0].imdbID;
+
+                string cachedMovie = await _cache.GetStringAsync(
+                    string.Format(Cache.Omdb, imdbID.Trim()));
+
+                if (string.IsNullOrEmpty(cachedMovie))
+                {
+                    try
+                    {
+                        movieResponse = await CallOMDB(imdbID, _options.IanOmdbEndpoint);
+                    }
+                    catch (Exception ex)
+                    {
+                        await ReplyAsync($"Error! {ex.Message}");
+                        return null;
+                    }
+                }
+                else
+                {
+                    movieResponse = JsonSerializer.Deserialize<Movie>(
+                        cachedMovie,
+                        new JsonSerializerOptions
+                        {
+                            PropertyNameCaseInsensitive = true
+                        });
+                }
+
+                return movieResponse;
+            }
+        }
+
         private async Task<OmdbStub> GetStubsAsync(string input)
         {
             var year = ParseInputForYear(ref input);
@@ -239,6 +251,12 @@ namespace DiscordIan.Module
                     throw new Exception("Invalid response data.");
                 }
 
+                data.Search = 
+                    data.Search
+                    .Where(m => m.Title.ToLower() == input.ToLower())
+                    .Concat(data.Search.Where(m => m.Title.ToLower() != input.ToLower()))
+                    .ToArray();
+
                 var stubCache = new CachedMovies
                 {
                     LastViewedMovie = 0,
@@ -258,7 +276,7 @@ namespace DiscordIan.Module
             return null;
         }
 
-        private async Task<Movie> GetMovieAsync(string criteria, string endpoint)
+        private async Task<Movie> CallOMDB(string criteria, string endpoint)
         {
             var headers = new Dictionary<string, string>
             {

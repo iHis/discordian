@@ -441,7 +441,7 @@ namespace DiscordIan.Module
                     ? $"{data.Location.Name}, {data.Location.Region}" 
                     : $"{data.Location.Name}, {data.Location.Country}",
                 Fields = new List<EmbedFieldBuilder>() {
-                    EmbedHelper.MakeField($"**{data.Forecast.Forecastday[0].Date}**",
+                    EmbedHelper.MakeField($"**{DateTime.Parse(data.Forecast.Forecastday[0].Date).DayOfWeek}\n{data.Forecast.Forecastday[0].Date}**",
                         $"**{data.Forecast.Forecastday[0].Day.Condition.Text.ToTitleCase()}**"
                         + $"\n**High:** {data.Forecast.Forecastday[0].Day.MaxtempF}F / {data.Forecast.Forecastday[0].Day.MaxtempC}C"
                         + $"\n**Low:** {data.Forecast.Forecastday[0].Day.MintempF}F / {data.Forecast.Forecastday[0].Day.MintempC}C"
@@ -450,7 +450,7 @@ namespace DiscordIan.Module
                             ? $"\n**Chance of Snow:** {data.Forecast.Forecastday[0].Day.DailyChanceOfSnow}%"
                             : ""),
                         true),
-                    EmbedHelper.MakeField($"**{data.Forecast.Forecastday[1].Date}**",
+                    EmbedHelper.MakeField($"**{DateTime.Parse(data.Forecast.Forecastday[0].Date).DayOfWeek}\n{data.Forecast.Forecastday[1].Date}**",
                         $"**{data.Forecast.Forecastday[1].Day.Condition.Text.ToTitleCase()}**"
                         + $"\n**High:** {data.Forecast.Forecastday[1].Day.MaxtempF}F / {data.Forecast.Forecastday[1].Day.MaxtempC}C"
                         + $"\n**Low:** {data.Forecast.Forecastday[1].Day.MintempF}F / {data.Forecast.Forecastday[1].Day.MintempC}C"
@@ -459,7 +459,7 @@ namespace DiscordIan.Module
                             ? $"\n**Chance of Snow:** {data.Forecast.Forecastday[1].Day.DailyChanceOfSnow}%"
                             : ""),
                         true),
-                    EmbedHelper.MakeField($"**{data.Forecast.Forecastday[2].Date}**",
+                    EmbedHelper.MakeField($"**{DateTime.Parse(data.Forecast.Forecastday[0].Date).DayOfWeek}\n{data.Forecast.Forecastday[2].Date}**",
                         $"**{data.Forecast.Forecastday[2].Day.Condition.Text.ToTitleCase()}**"
                         + $"\n**High:** {data.Forecast.Forecastday[2].Day.MaxtempF}F / {data.Forecast.Forecastday[2].Day.MaxtempC}C"
                         + $"\n**Low:** {data.Forecast.Forecastday[2].Day.MintempF}F / {data.Forecast.Forecastday[2].Day.MintempC}C"
