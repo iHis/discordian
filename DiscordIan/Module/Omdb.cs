@@ -67,11 +67,14 @@ namespace DiscordIan.Module
                 await GetExactMovieAsync(input) ?? await SearchMovieAsync(input)
                 : await SearchMovieAsync(input);
 
-            await ReplyAsync(null,
+            if (movieResponse != null)
+            {
+                await ReplyAsync(null,
                     false,
                     FormatOmdbResponse(movieResponse));
 
-            HistoryAdd(_cache, GetType().Name, input, apiTiming);
+                HistoryAdd(_cache, GetType().Name, input, apiTiming);
+            }
         }
 
         [Command("rtnext", RunMode = RunMode.Async)]
@@ -243,7 +246,7 @@ namespace DiscordIan.Module
             var response = await _fetchService.GetAsync<OmdbStub>(uri, headers);
             apiTiming += response.Elapsed;
 
-            if (response.IsSuccessful)
+            if (response.IsSuccessful && response?.Data?.Response == "True")
             {
                 var data = response.Data;
 
