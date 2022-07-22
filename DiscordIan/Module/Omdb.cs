@@ -185,7 +185,7 @@ namespace DiscordIan.Module
                 }
                 else
                 {
-                    await ReplyAsync("No results found, sorry!");
+                    await ReplyAsync("Invalid response data.");
                     return null;
                 }
             }
@@ -246,13 +246,18 @@ namespace DiscordIan.Module
             var response = await _fetchService.GetAsync<OmdbStub>(uri, headers);
             apiTiming += response.Elapsed;
 
-            if (response.IsSuccessful && response?.Data?.Response == "True")
+            if (response.IsSuccessful)
             {
                 var data = response.Data;
 
                 if (data == null)
                 {
                     throw new Exception("Invalid response data.");
+                }
+
+                if (data.Response == "False")
+                {
+                    return data;
                 }
 
                 data.Search = 
