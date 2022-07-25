@@ -14,7 +14,7 @@ namespace DiscordIan.Model.Weather
         public string Lon { get; set; }
 
         [JsonProperty("elevation")]
-        public int Elevation { get; set; }
+        public double Elevation { get; set; }
 
         [JsonProperty("timezone")]
         public string Timezone { get; set; }
@@ -64,7 +64,7 @@ namespace DiscordIan.Model.Weather
     public class CloudCover
     {
         [JsonProperty("total")]
-        public int Total { get; set; }
+        public double Total { get; set; }
     }
 
     public class CurrentWeather
@@ -88,7 +88,7 @@ namespace DiscordIan.Model.Weather
         public Precipitation Precipitation { get; set; }
 
         [JsonProperty("cloud_cover")]
-        public int CloudCover { get; set; }
+        public double CloudCover { get; set; }
     }
 
     public class Daily
@@ -160,7 +160,7 @@ namespace DiscordIan.Model.Weather
         public double Speed { get; set; }
 
         [JsonProperty("angle")]
-        public int Angle { get; set; }
+        public double Angle { get; set; }
 
         [JsonProperty("dir")]
         public string Dir { get; set; }
