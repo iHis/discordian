@@ -444,7 +444,7 @@ namespace DiscordIan.Module
 
                 var embed = FormatResultsCommon(CommonWeatherDTOMap(response.Data));
 
-                return (embed, $"Model\\Weather\\Icons\\MeteoSource\\set03\\medium\\{response.Data.Current.IconNum}.png");
+                return (embed, $"Model/Weather/Icons/MeteoSource/set03/medium/{response.Data.Current.IconNum}.png");
             }
 
             return (null, null);
