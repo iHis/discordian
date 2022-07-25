@@ -582,8 +582,8 @@ namespace DiscordIan.Module
                 Fields = new List<EmbedFieldBuilder>() {
                     EmbedHelper.MakeField($"Condition: **{data.Current.Condition}**",
                         $"\u200B    **Temp:** {data.Current.Temp}"
-                        + (string.IsNullOrEmpty(data.Current.FeelsLike) ? $"\n\u200B    **Feels Like:** {data.Current.FeelsLike}" : "")
-                        + (string.IsNullOrEmpty(data.Current.Humidity) ? $"\n\u200B    **Humidity:** {data.Current.Humidity}" : "")),
+                        + (!string.IsNullOrEmpty(data.Current.FeelsLike) ? $"\n\u200B    **Feels Like:** {data.Current.FeelsLike}" : "")
+                        + (!string.IsNullOrEmpty(data.Current.Humidity) ? $"\n\u200B    **Humidity:** {data.Current.Humidity}" : "")),
                     EmbedHelper.MakeField("Wind:",
                         $"\u200B    **Speed:** {data.Wind.Speed}"
                         + $"\n\u200B    **Direction:** {data.Wind.Direction}"),
