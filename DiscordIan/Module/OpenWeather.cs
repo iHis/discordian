@@ -561,8 +561,8 @@ namespace DiscordIan.Module
                         Condition = data.Daily.Data[0].Summary.ToTitleCase().Split("Temperature")[0],
                         TempHigh = $"{data.Daily.Data[0].AllDay.TemperatureMax}{tempUnit}",
                         TempLow = $"{data.Daily.Data[0].AllDay.TemperatureMin}{tempUnit}",
-                        PrecipChance = $"{data.Daily.Data[0].AllDay.Precipitation.Type.ToTitleCase()} " +
-                            $"{(data.Daily.Data[0].AllDay.Precipitation.Type != "none" ? (100*data.Daily.Data[0].AllDay.Precipitation.Total).ToString() : "")}%"
+                        PrecipChance = $"{data.Daily.Data[0].AllDay.Precipitation.Type.ToTitleCase()}" +
+                            $"{(data.Daily.Data[0].AllDay.Precipitation.Type != "none" ? $" {100*data.Daily.Data[0].AllDay.Precipitation.Total}%" : "")}"
                     }
                 };
 
