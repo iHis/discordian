@@ -10,6 +10,7 @@ using System.Xml.Serialization;
 using DiscordIan.Helper;
 using DiscordIan.Model;
 using Microsoft.Extensions.Logging;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Service
 {
@@ -113,14 +114,9 @@ namespace DiscordIan.Service
         {
             if (content?.Headers?.ContentType?.MediaType == json)
             {
-                var contentStream = await content.ReadAsStreamAsync();
-                var deserialized = JsonSerializer.DeserializeAsync<T>(
-                    contentStream,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-                return deserialized.Result;
+                var data = await content.ReadAsStringAsync();
+                var obj = JsonConvert.DeserializeObject<T>(data);
+                return obj;
             }
 
             if (content?.Headers?.ContentType?.MediaType == xml)

@@ -31,5 +31,7 @@
         public string InspiroBotEndpoint { get; set; }
         public string WeatherApiEndpoint { get; set; }
         public string WeatherApiKey { get; set; }
+        public string MeteoSourceEndpoint { get; set; }
+        public string MeteoSourceKey { get; set; }
     }
 }

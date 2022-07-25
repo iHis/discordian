@@ -19,6 +19,7 @@
   "IanBooksEndpoint": "https://www.googleapis.com/books/v1/volumes?q={0}&key={1}",
   "InspiroBotEndpoint": "https://inspirobot.me/api?generate=true",
   "WeatherApiEndpoint": "https://api.weatherapi.com/v1/forecast.json?key={0}&q={1}&days=3&aqi=no&alerts=no",
+  "MeteoSourceEndpoint": "https://www.meteosource.com/api/v1/free/point?lat={0}&lon={1}&sections=all&language=en&key={2}",
   "Serilog": {
     "WriteTo": [
       {
