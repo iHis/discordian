@@ -203,7 +203,7 @@ namespace DiscordIan.Module
                 return;
             }
 
-            await ReplyAsync(await GetCachedDefinition().ToString().WordSwap(_cache));
+            await ReplyAsync((await GetCachedDefinition()).ToString().WordSwap(_cache));
         }
 
         [Command("udstat", RunMode = RunMode.Async)]
