@@ -95,6 +95,7 @@ namespace DiscordIan.Module
 
         [Command("bknext", RunMode = RunMode.Async)]
         [Summary("Look up next book")]
+        [Alias("booknext")]
         public async Task NextAsync()
         {
             var cachedResponse = await _cache.GetStringAsync(CacheKey);
@@ -204,7 +205,9 @@ namespace DiscordIan.Module
             return new EmbedBuilder
             {
                 Author = EmbedHelper.MakeAuthor(response.VolumeInfo.Title.WordSwap(_cache), titleUrl),
-                Description = description.WordSwap(_cache),
+                Description = description
+                     .Substring(0, 2048)
+                     .WordSwap(_cache),
                 ThumbnailUrl = thumb,
                 Fields = new List<EmbedFieldBuilder>()
                     {
