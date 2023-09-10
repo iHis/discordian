@@ -190,6 +190,10 @@ namespace DiscordIan.Module
                 response.VolumeInfo.Description, 
                 "No description available.");
 
+            if (description.Length > 2048) {
+                description = description.Substring(0, 2048);
+            }
+
             string authors = response.VolumeInfo.Authors != null ?
                 string.Join(", ", response.VolumeInfo.Authors)
                 : "N/A";
@@ -205,9 +209,7 @@ namespace DiscordIan.Module
             return new EmbedBuilder
             {
                 Author = EmbedHelper.MakeAuthor(response.VolumeInfo.Title.WordSwap(_cache), titleUrl),
-                Description = description
-                     .Substring(0, 2048)
-                     .WordSwap(_cache),
+                Description = description.WordSwap(_cache),
                 ThumbnailUrl = thumb,
                 Fields = new List<EmbedFieldBuilder>()
                     {
