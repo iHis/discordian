@@ -33,5 +33,6 @@
         public string WeatherApiKey { get; set; }
         public string MeteoSourceEndpoint { get; set; }
         public string MeteoSourceKey { get; set; }
+        public string PollinationsAIEndpoint { get; set; }
     }
 }
