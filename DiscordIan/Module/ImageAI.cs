@@ -51,7 +51,7 @@ namespace DiscordIan.Module
                 await ReplyAsync("Prick.");
                 return;
             }
-
+            
             var url = string.Format(_options.PollinationsAIEndpoint, 
                 Uri.EscapeDataString(prompt), 
                 new Random().Next(1, 9999));
@@ -65,7 +65,7 @@ namespace DiscordIan.Module
                 response.Data.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
                 stream.Seek(0, SeekOrigin.Begin);
                 response.Data.Dispose();
-                var message = await Context.Channel.SendFileAsync(stream, "image.jpeg", prompt);
+                var message = await Context.Channel.SendFileAsync(stream, "image.jpeg", $"Prompt: {prompt}");
 
                 ImgCache(_cache, Context.User.Id, Context.Channel.Id, message.Id);
             }
@@ -86,14 +86,26 @@ namespace DiscordIan.Module
 
             if (!string.IsNullOrEmpty(cachedString))
             {
+                var messageRef = Context.Message.ReferencedMessage;
                 var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
-                var msg = list.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id);
+                var msg = messageRef != null 
+                    && messageRef.Author.Id == _client.CurrentUser.Id 
+                    && messageRef.Content.StartsWith("Prompt:")
+                    ? new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id, UserId = messageRef.Author.Id }
+                    : list.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id);
 
                 if (msg != null && msg.MessageId != 0)
                 {
                     var channel = _client.GetChannel(msg.ChannelId) as ITextChannel;
+                    var message = await channel.GetMessageAsync(msg.MessageId);
 
-                    await channel.DeleteMessageAsync(msg.MessageId);
+                    if (message != null)
+                    {
+                        await channel.DeleteMessageAsync(msg.MessageId);
+                    }
+
+                    list.Remove(msg);
+                    await _cache.SetStringAsync(ImgKey, JsonConvert.SerializeObject(list));
                 }
             }
         }

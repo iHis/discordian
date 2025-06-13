@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
-using Discord.WebSocket;
 using DiscordIan.Model;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Module
 {
@@ -72,11 +71,11 @@ namespace DiscordIan.Module
                 };
 
                 await cache.SetStringAsync(HistoryKey,
-                    JsonSerializer.Serialize(history));
+                    JsonConvert.SerializeObject(history));
             }
             else
             {
-                var history = JsonSerializer.Deserialize<HistoryModel>(cachedString);
+                var history = JsonConvert.DeserializeObject<HistoryModel>(cachedString);
                 history.HistoryList.Add(historyItem);
 
                 var pastUserHist = history.HistoryList.Where(h => h.UserName == user);
@@ -87,7 +86,7 @@ namespace DiscordIan.Module
                 }
 
                 await cache.SetStringAsync(HistoryKey,
-                    JsonSerializer.Serialize(history));
+                    JsonConvert.SerializeObject(history));
             }
         }
 
@@ -106,22 +105,17 @@ namespace DiscordIan.Module
                 var list = new List<ImgCacheModel> { item };
 
                 await cache.SetStringAsync(ImgKey,
-                    JsonSerializer.Serialize(list));
+                    JsonConvert.SerializeObject(list));
             }
             else
             {
-                var list = JsonSerializer.Deserialize<List<ImgCacheModel>>(cachedString);
+                var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
+
+                list.RemoveAll(l => l.ChannelId == channelId && l.UserId == userId);
                 list.Add(item);
 
-                var pastUserHist = list.Where(h => h.UserId == userId);
-
-                if (pastUserHist.Count() > 1)
-                {
-                    list.RemoveAt(0);
-                }
-
                 await cache.SetStringAsync(ImgKey,
-                    JsonSerializer.Serialize(list));
+                    JsonConvert.SerializeObject(list));
             }
         }
     }
