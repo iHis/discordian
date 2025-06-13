@@ -43,7 +43,7 @@ namespace DiscordIan.Module
         [Command("imgai", RunMode = RunMode.Async)]
         [Summary("Generate AI image.")]
         [Alias("img")]
-        public async Task GenerateInspirationalQuote([Remainder]
+        public async Task AIGeneratedImage([Remainder]
             [Summary("Prompt")] string prompt)
         {
             if (Context.User.IsNaughty())
@@ -67,7 +67,7 @@ namespace DiscordIan.Module
                 response.Data.Dispose();
                 var message = await Context.Channel.SendFileAsync(stream, "image.jpeg", $"Prompt: {prompt}");
 
-                ImgCache(_cache, Context.User.Id, Context.Channel.Id, message.Id);
+                ImgCache(_cache, Context.User.Id, Context.Channel.Id, message.Id, prompt);
             }
             else
             {
@@ -75,6 +75,30 @@ namespace DiscordIan.Module
             }
 
             HistoryAdd(_cache, GetType().Name, prompt, apiTiming);
+        }
+
+        [Command("imgnext", RunMode = RunMode.Async)]
+        [Summary("Run again with new seed.")]
+        public async Task GetAnotherImage()
+        {
+            var cachedString = await _cache.GetStringAsync(ImgKey);
+
+            if (!string.IsNullOrEmpty(cachedString))
+            {
+                var userId = Context.User.Id;
+                var channelId = Context.Channel.Id;
+                var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
+
+                if (list != null)
+                {
+                    var msg = list.FirstOrDefault(l => l.UserId == userId && l.ChannelId == channelId);
+
+                    if (msg != null)
+                    {
+                        await AIGeneratedImage(msg.Prompt);
+                    }
+                }
+            }
         }
 
         [Command("imgdel", RunMode = RunMode.Async)]

@@ -90,14 +90,15 @@ namespace DiscordIan.Module
             }
         }
 
-        public async void ImgCache(IDistributedCache cache, ulong userId, ulong channelId, ulong messageId)
+        public async void ImgCache(IDistributedCache cache, ulong userId, ulong channelId, ulong messageId, string prompt)
         {
             var cachedString = await cache.GetStringAsync(ImgKey);
             var item = new ImgCacheModel
             {
                 UserId = userId,
                 ChannelId = channelId,
-                MessageId = messageId
+                MessageId = messageId,
+                Prompt = prompt
             };
 
             if (string.IsNullOrEmpty(cachedString))

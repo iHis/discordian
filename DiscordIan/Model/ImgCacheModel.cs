@@ -9,5 +9,6 @@ namespace DiscordIan.Model
         public ulong UserId { get; set; }
         public ulong ChannelId { get; set; }
         public ulong MessageId { get; set; }
+        public string Prompt { get; set; }
     }
 }
