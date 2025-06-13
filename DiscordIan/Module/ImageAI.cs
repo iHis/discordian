@@ -91,7 +91,7 @@ namespace DiscordIan.Module
 
                 if (list != null)
                 {
-                    var msg = list.FirstOrDefault(l => l.ChannelId == channelId);
+                    var msg = list.OrderByDescending(l => l.Timestamp).FirstOrDefault(l => l.ChannelId == channelId);
 
                     if (msg != null)
                     {

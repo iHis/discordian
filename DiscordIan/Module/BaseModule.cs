@@ -95,6 +95,7 @@ namespace DiscordIan.Module
             var cachedString = await cache.GetStringAsync(ImgKey);
             var item = new ImgCacheModel
             {
+                Timestamp = DateTime.Now,
                 UserId = userId,
                 ChannelId = channelId,
                 MessageId = messageId,

@@ -6,6 +6,7 @@ namespace DiscordIan.Model
 {
     public class ImgCacheModel
     {
+        public DateTime Timestamp { get; set; }
         public ulong UserId { get; set; }
         public ulong ChannelId { get; set; }
         public ulong MessageId { get; set; }
