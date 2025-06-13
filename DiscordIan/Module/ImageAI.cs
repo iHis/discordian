@@ -91,7 +91,7 @@ namespace DiscordIan.Module
 
                 if (list != null)
                 {
-                    var msg = list.FirstOrDefault(l => l.UserId == userId && l.ChannelId == channelId);
+                    var msg = list.FirstOrDefault(l => l.ChannelId == channelId);
 
                     if (msg != null)
                     {
@@ -128,8 +128,8 @@ namespace DiscordIan.Module
                         await channel.DeleteMessageAsync(msg.MessageId);
                     }
 
-                    list.Remove(msg);
-                    await _cache.SetStringAsync(ImgKey, JsonConvert.SerializeObject(list));
+                    //list.Remove(msg);
+                    //await _cache.SetStringAsync(ImgKey, JsonConvert.SerializeObject(list));
                 }
             }
         }
