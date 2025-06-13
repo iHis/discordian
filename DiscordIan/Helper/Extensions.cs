@@ -3,8 +3,10 @@ using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
 using System.IO;
+using System.Linq;
 using System.Text.Json;
 using System.Text.RegularExpressions;
+using Discord.WebSocket;
 using DiscordIan.Key;
 using DiscordIan.Model;
 using Microsoft.Extensions.Caching.Distributed;
@@ -171,6 +173,21 @@ namespace DiscordIan.Helper
                 list[rnd] = list[i];
                 list[i] = value;
             }
+        }
+
+        public static bool IsNaughty(this SocketUser user)
+        {
+            if (!(user is SocketGuildUser usr))
+            {
+                return false;
+            }
+
+            if (usr.Roles.Any(role => role.Name.Equals("Naughty", StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            return false;
         }
     }
 }

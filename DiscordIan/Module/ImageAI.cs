@@ -4,6 +4,7 @@ using System.IO;
 using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
+using DiscordIan.Helper;
 using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
@@ -34,6 +35,12 @@ namespace DiscordIan.Module
         public async Task GenerateInspirationalQuote([Remainder]
             [Summary("Prompt")] string prompt)
         {
+            if (Context.User.IsNaughty())
+            {
+                await ReplyAsync("Prick.");
+                return;
+            }
+
             var url = string.Format(_options.PollinationsAIEndpoint, 
                 Uri.EscapeDataString(prompt), 
                 new Random().Next(1, 9999));
