@@ -1,13 +1,20 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 using System.Text;
+using System.Threading.Channels;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using DiscordIan.Helper;
+using DiscordIan.Key;
+using DiscordIan.Model;
 using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Module
 {
@@ -16,17 +23,21 @@ namespace DiscordIan.Module
         private readonly IDistributedCache _cache;
         private readonly FetchService _fetchService;
         private readonly Model.Options _options;
+        private readonly DiscordSocketClient _client;
         private TimeSpan apiTiming = new TimeSpan();
 
         public ImageAI(IDistributedCache cache,
             FetchService fetchService,
-            IOptionsMonitor<Model.Options> optionsAccessor)
+            IOptionsMonitor<Model.Options> optionsAccessor,
+            DiscordSocketClient client)
         {
             _cache = cache ?? throw new ArgumentNullException(nameof(cache));
             _fetchService = fetchService
                 ?? throw new ArgumentNullException(nameof(fetchService));
             _options = optionsAccessor.CurrentValue
                 ?? throw new ArgumentNullException(nameof(optionsAccessor));
+            _client = client
+                ?? throw new ArgumentNullException(nameof(client));
         }
 
         [Command("imgai", RunMode = RunMode.Async)]
@@ -54,14 +65,37 @@ namespace DiscordIan.Module
                 response.Data.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
                 stream.Seek(0, SeekOrigin.Begin);
                 response.Data.Dispose();
-                await Context.Channel.SendFileAsync(stream, "image.jpeg", string.Empty);
+                var message = await Context.Channel.SendFileAsync(stream, "image.jpeg", prompt);
+
+                ImgCache(_cache, Context.User.Id, Context.Channel.Id, message.Id);
             }
             else
             {
                 await ReplyAsync($"API call unsuccessful: {response.Message}");
             }
 
-            HistoryAdd(_cache, GetType().Name, null, apiTiming);
+            HistoryAdd(_cache, GetType().Name, prompt, apiTiming);
+        }
+
+        [Command("imgdel", RunMode = RunMode.Async)]
+        [Summary("Delete last AI image.")]
+        [Alias("nope")]
+        public async Task DeleteLastImage()
+        {
+            var cachedString = await _cache.GetStringAsync(ImgKey);
+
+            if (!string.IsNullOrEmpty(cachedString))
+            {
+                var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
+                var msg = list.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id);
+
+                if (msg != null && msg.MessageId != 0)
+                {
+                    var channel = _client.GetChannel(msg.ChannelId) as ITextChannel;
+
+                    await channel.DeleteMessageAsync(msg.MessageId);
+                }
+            }
         }
     }
 }

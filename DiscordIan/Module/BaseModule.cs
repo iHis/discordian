@@ -5,6 +5,7 @@ using System.Text.Json;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using DiscordIan.Model;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -15,6 +16,7 @@ namespace DiscordIan.Module
         private const int MaxReplyLength = 2000;
         private const string ForgetIt = "\u2026 never mind, I'm tired of typing";
         private const string HistoryKey = "History";
+        public const string ImgKey = "AIImgKey";
 
         protected override async Task<IUserMessage> ReplyAsync(string message = null,
             bool isTTS = false,
@@ -86,6 +88,40 @@ namespace DiscordIan.Module
 
                 await cache.SetStringAsync(HistoryKey,
                     JsonSerializer.Serialize(history));
+            }
+        }
+
+        public async void ImgCache(IDistributedCache cache, ulong userId, ulong channelId, ulong messageId)
+        {
+            var cachedString = await cache.GetStringAsync(ImgKey);
+            var item = new ImgCacheModel
+            {
+                UserId = userId,
+                ChannelId = channelId,
+                MessageId = messageId
+            };
+
+            if (string.IsNullOrEmpty(cachedString))
+            {
+                var list = new List<ImgCacheModel> { item };
+
+                await cache.SetStringAsync(ImgKey,
+                    JsonSerializer.Serialize(list));
+            }
+            else
+            {
+                var list = JsonSerializer.Deserialize<List<ImgCacheModel>>(cachedString);
+                list.Add(item);
+
+                var pastUserHist = list.Where(h => h.UserId == userId);
+
+                if (pastUserHist.Count() > 1)
+                {
+                    list.RemoveAt(0);
+                }
+
+                await cache.SetStringAsync(ImgKey,
+                    JsonSerializer.Serialize(list));
             }
         }
     }
