@@ -128,7 +128,7 @@ namespace DiscordIan.Module
                     && messageRef.Embeds.Any()
                     && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
                 {
-                    model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id, UserId = messageRef.Author.Id };
+                    model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id };
                 }
             }
 
