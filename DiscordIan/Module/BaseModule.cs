@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using DiscordIan.Model;
+using DiscordIan.Model.ImageAI;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 
@@ -16,6 +17,8 @@ namespace DiscordIan.Module
         private const string ForgetIt = "\u2026 never mind, I'm tired of typing";
         private const string HistoryKey = "History";
         public const string ImgKey = "AIImgKey";
+        public const ulong ImgChannel = 1052342379643940864;
+        public const ulong QuakeChannel = 633650348195577857;
 
         protected override async Task<IUserMessage> ReplyAsync(string message = null,
             bool isTTS = false,
@@ -90,7 +93,7 @@ namespace DiscordIan.Module
             }
         }
 
-        public async void ImgCache(IDistributedCache cache, ulong userId, ulong channelId, ulong messageId, string prompt)
+        public async void ImgCache(IDistributedCache cache, ulong userId, ulong channelId, ulong messageId, ImgRequestModel request)
         {
             var cachedString = await cache.GetStringAsync(ImgKey);
             var item = new ImgCacheModel
@@ -99,7 +102,7 @@ namespace DiscordIan.Module
                 UserId = userId,
                 ChannelId = channelId,
                 MessageId = messageId,
-                Prompt = prompt
+                Request = request
             };
 
             if (string.IsNullOrEmpty(cachedString))

@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace DiscordIan.Model
+namespace DiscordIan.Model.ImageAI
 {
     public class ImgCacheModel
     {
@@ -10,6 +10,6 @@ namespace DiscordIan.Model
         public ulong UserId { get; set; }
         public ulong ChannelId { get; set; }
         public ulong MessageId { get; set; }
-        public string Prompt { get; set; }
+        public ImgRequestModel Request { get; set; }
     }
 }
