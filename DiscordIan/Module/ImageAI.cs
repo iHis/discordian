@@ -122,11 +122,12 @@ namespace DiscordIan.Module
 
             if (messageRef != null)
             {
-                if (messageRef.Author.Id == _client.CurrentUser.Id
-                    && messageRef.Embeds.Any()
-                    && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
+                if (messageRef.Author.Id == _client.CurrentUser.Id 
+                    && ((messageRef.Embeds.Any()
+                        && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
+                    || messageRef.Content.StartsWith("Prompt:")))
                 {
-                    model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id, UserId = messageRef.Author.Id };
+                    model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id };
                 }
             }
 
