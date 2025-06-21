@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 using System.Net;
 using System.Net.Http;
 using System.Net.Security;
@@ -114,7 +113,7 @@ namespace DiscordIan
             services.AddTransient<FetchService>();
 
             // system services
-            services.AddTransient(x =>             
+            services.AddTransient(x =>
                 new HttpClient(BuildHTTPHandler())
                 {
                     DefaultRequestVersion = HttpVersion.Version10
@@ -128,7 +127,8 @@ namespace DiscordIan
         {
             var handler = new HttpClientHandler();
 
-            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) => {
+            handler.ServerCertificateCustomValidationCallback = (httpRequestMessage, cert, cetChain, policyErrors) =>
+            {
                 if (policyErrors == SslPolicyErrors.None)
                 {
                     return true;

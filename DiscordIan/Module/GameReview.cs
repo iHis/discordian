@@ -28,7 +28,7 @@ namespace DiscordIan.Module
                 ?? throw new ArgumentNullException(nameof(fetchService));
             _options = optionsAccessor.CurrentValue
                 ?? throw new ArgumentNullException(nameof(optionsAccessor));
-            _cache =  cache
+            _cache = cache
                 ?? throw new ArgumentNullException(nameof(cache));
         }
 
@@ -125,11 +125,11 @@ namespace DiscordIan.Module
                 ThumbnailUrl = gameSummary.Background_Image.ValidateUri(),
                 Fields = new List<EmbedFieldBuilder>
                 {
-                    EmbedHelper.MakeField("Metacritic", 
+                    EmbedHelper.MakeField("Metacritic",
                         string.Format("{0}/100",
                             gameSummary.Metacritic?.ToString() ?? "null"),
                         true),
-                    EmbedHelper.MakeField("Released", 
+                    EmbedHelper.MakeField("Released",
                         DateHelper.ToWesternDate(gameSummary.Released?.ToString()),
                         true),
                     EmbedHelper.MakeField("Developer",

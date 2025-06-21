@@ -143,35 +143,32 @@ namespace DiscordIan.Module
         }
         private async Task<string> GetCachedDefinition()
         {
-            var cachedString = await _cache.GetStringAsync(CacheKey);
+            var cache = await _cache.Deserialize<CachedDefinitions>(CacheKey);
 
-            if (cachedString?.Length == 0)
+            if (cache == default)
             {
                 return "No definitions queued.";
             }
             else
             {
-                var cached = JsonSerializer.Deserialize<CachedDefinitions>(cachedString);
-                cached.LastViewedDefinition++;
-                if (cached.List.Length > cached.LastViewedDefinition)
+                cache.LastViewedDefinition++;
+                if (cache.List.Length > cache.LastViewedDefinition)
                 {
-                    await _cache.RemoveAsync(CacheKey);
                     await _cache.SetStringAsync(CacheKey,
-                        JsonSerializer.Serialize(cached));
+                        JsonSerializer.Serialize(cache));
 
-                    return FormatDefinition(cached.List, cached.LastViewedDefinition, cached.LastViewedPage);
+                    return FormatDefinition(cache.List, cache.LastViewedDefinition, cache.LastViewedPage);
                 }
-                else if (cached.List.Length == cached.LastViewedDefinition 
-                    && cached.LastViewedDefinition == PageMax)
+                else if (cache.List.Length == cache.LastViewedDefinition
+                    && cache.LastViewedDefinition == PageMax)
                 {
-                    cached.LastViewedPage++;
-                    cached.LastViewedDefinition = 0;
+                    cache.LastViewedPage++;
+                    cache.LastViewedDefinition = 0;
 
-                    await _cache.RemoveAsync(CacheKey);
                     await _cache.SetStringAsync(CacheKey,
-                        JsonSerializer.Serialize(cached));
+                        JsonSerializer.Serialize(cache));
 
-                    return (await GetDefinition(cached.List[0].Word, cached.LastViewedPage)).ToString().WordSwap(_cache);
+                    return (await GetDefinition(cache.List[0].Word, cache.LastViewedPage)).ToString().WordSwap(_cache);
                 }
             }
             return "That's all, folks.";

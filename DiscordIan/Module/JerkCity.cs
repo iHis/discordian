@@ -1,11 +1,8 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Drawing;
 using System.IO;
 using System.Linq;
-using System.Security.Cryptography;
 using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
@@ -105,7 +102,7 @@ namespace DiscordIan.Module
 
                 var url = uri.BaseUrl() + response.episodes[0].image;
 
-                await ReplyAsync(null, 
+                await ReplyAsync(null,
                     false,
                     FormatJerks(input, 1, response.episodes.Count(), url));
             }
@@ -122,36 +119,34 @@ namespace DiscordIan.Module
         [Alias("jn")]
         public async Task JerkCityNextAsync()
         {
-            var cachedString = await _cache.GetStringAsync(CacheKey);
+            var cache = await _cache.Deserialize<CachedJerks>(CacheKey);
 
-            if (cachedString?.Length == 0)
+            if (cache == default)
             {
                 await ReplyAsync($"I've got nothing for you, {Context.User.Username}");
                 return;
             }
             else
             {
-                var cached = JsonSerializer.Deserialize<CachedJerks>(cachedString);
-                cached.LastViewedJerk++;
+                cache.LastViewedJerk++;
 
-                if (string.IsNullOrEmpty(cached.JerkList[cached.LastViewedJerk]))
+                if (string.IsNullOrEmpty(cache.JerkList[cache.LastViewedJerk]))
                 {
                     await ReplyAsync($"I've got nothing for you, {Context.User.Username}");
                     return;
                 }
 
-                if (cached.JerkList.Length > cached.LastViewedJerk)
+                if (cache.JerkList.Length > cache.LastViewedJerk)
                 {
-                    await _cache.RemoveAsync(CacheKey);
                     await _cache.SetStringAsync(CacheKey,
-                        JsonSerializer.Serialize(cached));
+                        JsonSerializer.Serialize(cache));
 
                     await ReplyAsync(null,
                         false,
-                        FormatJerks(cached.SearchString, 
-                            cached.LastViewedJerk + 1, 
-                            cached.JerkList.Length, 
-                            cached.JerkList[cached.LastViewedJerk]));
+                        FormatJerks(cache.SearchString,
+                            cache.LastViewedJerk + 1,
+                            cache.JerkList.Length,
+                            cache.JerkList[cache.LastViewedJerk]));
                 }
             }
         }

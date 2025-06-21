@@ -2,14 +2,14 @@
 using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.IO;
 using System.Linq;
-using System.Text.Json;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 using Discord.WebSocket;
 using DiscordIan.Key;
 using DiscordIan.Model;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Helper
 {
@@ -17,7 +17,7 @@ namespace DiscordIan.Helper
     {
         public static string IsNullOrEmptyReplace(this string str, string replace)
         {
-            return (string.IsNullOrEmpty(str)) ? replace : str;            
+            return (string.IsNullOrEmpty(str)) ? replace : str;
         }
 
         public static string ToTitleCase(this string str)
@@ -72,14 +72,14 @@ namespace DiscordIan.Helper
                 return str;
             }
 
-            var wordSwaps = JsonSerializer.Deserialize<WordSwaps>(cachedSwaps);
+            var wordSwaps = JsonConvert.DeserializeObject<WordSwaps>(cachedSwaps);
 
             if (wordSwaps != null)
             {
-                 foreach (var swap in wordSwaps.SwapList)
-                    {
-                        str = str.Replace(swap.inbound, swap.outbound);
-                    }
+                foreach (var swap in wordSwaps.SwapList)
+                {
+                    str = str.Replace(swap.inbound, swap.outbound);
+                }
             }
 
             return str;
@@ -162,16 +162,13 @@ namespace DiscordIan.Helper
 
         public static void Shuffle<T>(this IList<T> list)
         {
-            Random random = new Random();
-            int n = list.Count;
+            var random = new Random();
 
             for (int i = list.Count - 1; i > 1; i--)
             {
-                int rnd = random.Next(i + 1);
+                var rnd = random.Next(i + 1);
 
-                T value = list[rnd];
-                list[rnd] = list[i];
-                list[i] = value;
+                (list[i], list[rnd]) = (list[rnd], list[i]);
             }
         }
 
@@ -188,6 +185,18 @@ namespace DiscordIan.Helper
             }
 
             return false;
+        }
+
+        public static async Task<T> Deserialize<T>(this IDistributedCache cache, string key)
+        {
+            var cacheString = await cache.GetStringAsync(key);
+
+            if (!string.IsNullOrEmpty(cacheString))
+            {
+                return JsonConvert.DeserializeObject<T>(cacheString);
+            }
+
+            return default;
         }
     }
 }

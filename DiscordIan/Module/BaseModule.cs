@@ -4,8 +4,9 @@ using System.Linq;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using DiscordIan.Helper;
+using DiscordIan.Key;
 using DiscordIan.Model;
-using DiscordIan.Model.ImageAI;
 using Microsoft.Extensions.Caching.Distributed;
 using Newtonsoft.Json;
 
@@ -15,8 +16,6 @@ namespace DiscordIan.Module
     {
         private const int MaxReplyLength = 2000;
         private const string ForgetIt = "\u2026 never mind, I'm tired of typing";
-        private const string HistoryKey = "History";
-        public const string ImgKey = "AIImgKey";
         public const ulong ImgChannel = 1052342379643940864;
         public const ulong QuakeChannel = 633650348195577857;
 
@@ -24,7 +23,7 @@ namespace DiscordIan.Module
             bool isTTS = false,
             Embed embed = null,
             RequestOptions options = null,
-            AllowedMentions allowedMentions = null, 
+            AllowedMentions allowedMentions = null,
             MessageReference messageReference = null)
         {
             string response = message;
@@ -51,7 +50,7 @@ namespace DiscordIan.Module
             return await base.ReplyAsync(response, isTTS, embed, options);
         }
 
-        public async void HistoryAdd(IDistributedCache cache, string service, string input, TimeSpan time)
+        public async void HistoryAdd(IDistributedCache _cache, string service, string input, TimeSpan time)
         {
             var user = Context.User.Username;
 
@@ -64,63 +63,29 @@ namespace DiscordIan.Module
                 AddDate = DateTime.Now
             };
 
-            var cachedString = await cache.GetStringAsync(HistoryKey);
+            var cache = await _cache.Deserialize<HistoryModel>(Cache.History);
 
-            if (string.IsNullOrEmpty(cachedString))
+            if (cache == default)
             {
                 var history = new HistoryModel
                 {
                     HistoryList = new List<HistoryItem> { historyItem }
                 };
 
-                await cache.SetStringAsync(HistoryKey,
-                    JsonConvert.SerializeObject(history));
+                await _cache.SetStringAsync(Cache.History, JsonConvert.SerializeObject(history));
             }
             else
             {
-                var history = JsonConvert.DeserializeObject<HistoryModel>(cachedString);
-                history.HistoryList.Add(historyItem);
+                cache.HistoryList.Add(historyItem);
 
-                var pastUserHist = history.HistoryList.Where(h => h.UserName == user);
+                var pastUserHist = cache.HistoryList.Where(h => h.UserName == user);
 
                 if (pastUserHist.Count() > 10)
                 {
-                    history.HistoryList.RemoveAt(0);
+                    cache.HistoryList.RemoveAt(0);
                 }
 
-                await cache.SetStringAsync(HistoryKey,
-                    JsonConvert.SerializeObject(history));
-            }
-        }
-
-        public async void ImgCache(IDistributedCache cache, ulong userId, ulong channelId, ulong messageId, ImgRequestModel request)
-        {
-            var cachedString = await cache.GetStringAsync(ImgKey);
-            var item = new ImgCacheModel
-            {
-                Timestamp = DateTime.Now,
-                UserId = userId,
-                ChannelId = channelId,
-                MessageId = messageId,
-                Request = request
-            };
-
-            if (string.IsNullOrEmpty(cachedString))
-            {
-                var list = new List<ImgCacheModel> { item };
-
-                await cache.SetStringAsync(ImgKey,
-                    JsonConvert.SerializeObject(list));
-            }
-            else
-            {
-                var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
-
-                list.RemoveAll(l => l.ChannelId == channelId && l.UserId == userId);
-                list.Add(item);
-
-                await cache.SetStringAsync(ImgKey,
-                    JsonConvert.SerializeObject(list));
+                await _cache.SetStringAsync(Cache.History, JsonConvert.SerializeObject(cache));
             }
         }
     }

@@ -1,6 +1,4 @@
-﻿using System;
-
-namespace DiscordIan.Model.Weather
+﻿namespace DiscordIan.Model.Weather
 {
     public class CommonWeatherModel
     {

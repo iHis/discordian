@@ -1,7 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using DiscordIan.Helper;
@@ -30,15 +28,15 @@ namespace DiscordIan.Module
         {
             input = input.IsNullOrEmptyReplace("%");
 
-            string cachedQuotes = await _cache.GetStringAsync(string.Format(Cache.Quote, input.Trim()));
+            var cache = await _cache.Deserialize<string[]>(string.Format(Cache.Quote, input.Trim()));
             string[] quoteList;
 
-            if (string.IsNullOrWhiteSpace(cachedQuotes))
+            if (cache == default)
             {
                 quoteList = SqliteHelper.GetQuotes(input);
 
                 await _cache.SetStringAsync(
-                    string.Format(Cache.Quote, input.Trim()), 
+                    string.Format(Cache.Quote, input.Trim()),
                     JsonConvert.SerializeObject(quoteList),
                     new DistributedCacheEntryOptions
                     {
@@ -47,7 +45,7 @@ namespace DiscordIan.Module
             }
             else
             {
-                quoteList = JsonConvert.DeserializeObject<string[]>(cachedQuotes);
+                quoteList = cache;
             }
 
             if (!quoteList.Any())
@@ -92,25 +90,24 @@ namespace DiscordIan.Module
         [Alias("qnext", "quonext", "quotesnext")]
         public async Task QuoteNextAsync()
         {
-            var cachedString = await _cache.GetStringAsync(CacheKey);
+            var cache = await _cache.Deserialize<CachedQuotes>(CacheKey);
 
-            if (cachedString?.Length == 0)
+            if (cache == default)
             {
                 await ReplyAsync("No definitions queued.");
                 return;
             }
             else
             {
-                var cached = JsonConvert.DeserializeObject<CachedQuotes>(cachedString);
-                cached.LastViewedQuote++;
+                cache.LastViewedQuote++;
 
-                if (cached.QuoteList.Length > cached.LastViewedQuote)
+                if (cache.QuoteList.Length > cache.LastViewedQuote)
                 {
                     await _cache.RemoveAsync(CacheKey);
                     await _cache.SetStringAsync(CacheKey,
-                        JsonConvert.SerializeObject(cached));
+                        JsonConvert.SerializeObject(cache));
 
-                    await ReplyAsync(FormatQuote(cached));
+                    await ReplyAsync(FormatQuote(cache));
 
                     return;
                 }

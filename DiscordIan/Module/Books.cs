@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Text.Json;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using System.Web;
@@ -11,10 +9,10 @@ using Discord.Commands;
 using DiscordIan.Helper;
 using DiscordIan.Key;
 using DiscordIan.Model;
-using DiscordIan.Model.Omdb;
 using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Module
 {
@@ -49,11 +47,10 @@ namespace DiscordIan.Module
         public async Task CurrentAsync([Remainder]
             [Summary("Name of book")] string input)
         {
-            string cachedResponse = await _cache.GetStringAsync(
-                string.Format(Key.Cache.BookList, input.Trim()));
+            var cache = await _cache.Deserialize<CachedBooks>(string.Format(Cache.BookList, input.Trim()));
             BookList listResponse;
 
-            if (string.IsNullOrEmpty(cachedResponse))
+            if (cache == default)
             {
                 try
                 {
@@ -67,14 +64,7 @@ namespace DiscordIan.Module
             }
             else
             {
-                var cacheBooks = JsonSerializer.Deserialize<CachedBooks>(
-                    cachedResponse,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                listResponse = cacheBooks.BookList;
+                listResponse = cache.BookList;
             }
 
             if (listResponse?.TotalItems == 0)
@@ -98,26 +88,23 @@ namespace DiscordIan.Module
         [Alias("booknext")]
         public async Task NextAsync()
         {
-            var cachedResponse = await _cache.GetStringAsync(CacheKey);
+            var cache = await _cache.Deserialize<CachedBooks>(CacheKey);
 
-            if (cachedResponse?.Length == 0)
+            if (cache == default)
             {
                 await ReplyAsync("No books queued.");
             }
             else
             {
-                var cached = JsonSerializer.Deserialize<CachedBooks>(cachedResponse);
-                cached.LastViewedBook++;
+                cache.LastViewedBook++;
 
-                if (cached.BookList.TotalItems > cached.LastViewedBook)
+                if (cache.BookList.TotalItems > cache.LastViewedBook)
                 {
-                    await _cache.RemoveAsync(CacheKey);
-                    await _cache.SetStringAsync(CacheKey,
-                        JsonSerializer.Serialize(cached));
+                    await _cache.SetStringAsync(CacheKey, JsonConvert.SerializeObject(cache));
 
                     await ReplyAsync(null,
                         false,
-                        FormatBookResponse(cached.BookList.Items[cached.LastViewedBook]));
+                        FormatBookResponse(cache.BookList.Items[cache.LastViewedBook]));
                 }
                 else
                 {
@@ -168,7 +155,7 @@ namespace DiscordIan.Module
                 };
 
                 await _cache.SetStringAsync(CacheKey,
-                    JsonSerializer.Serialize(bookCache),
+                    JsonConvert.SerializeObject(bookCache),
                     new DistributedCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4)
@@ -183,14 +170,15 @@ namespace DiscordIan.Module
         private Embed FormatBookResponse(Item response)
         {
             string titleUrl = Extensions.IsNullOrEmptyReplace(
-                response.VolumeInfo.PreviewLink.ValidateUri(), 
+                response.VolumeInfo.PreviewLink.ValidateUri(),
                 string.Empty);
 
             string description = Extensions.IsNullOrEmptyReplace(
-                response.VolumeInfo.Description, 
+                response.VolumeInfo.Description,
                 "No description available.");
 
-            if (description.Length > 2048) {
+            if (description.Length > 2048)
+            {
                 description = description.Substring(0, 2048);
             }
 
@@ -213,9 +201,9 @@ namespace DiscordIan.Module
                 ThumbnailUrl = thumb,
                 Fields = new List<EmbedFieldBuilder>()
                     {
-                        EmbedHelper.MakeField("Author:", 
+                        EmbedHelper.MakeField("Author:",
                             authors.WordSwap(_cache)),
-                        EmbedHelper.MakeField("Published:", 
+                        EmbedHelper.MakeField("Published:",
                             publishDate)
                     }
             }.Build();

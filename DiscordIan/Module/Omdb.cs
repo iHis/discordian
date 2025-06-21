@@ -51,9 +51,7 @@ namespace DiscordIan.Module
         {
             var movieResponse = await GetExactMovieAsync(input);
 
-            await ReplyAsync(null,
-                false,
-                FormatOmdbResponse(movieResponse));
+            await ReplyAsync(null, false, FormatOmdbResponse(movieResponse));
 
             HistoryAdd(_cache, GetType().Name, input, apiTiming);
         }
@@ -69,9 +67,7 @@ namespace DiscordIan.Module
 
             if (movieResponse != null)
             {
-                await ReplyAsync(null,
-                    false,
-                    FormatOmdbResponse(movieResponse));
+                await ReplyAsync(null, false, FormatOmdbResponse(movieResponse));
 
                 HistoryAdd(_cache, GetType().Name, input, apiTiming);
             }
@@ -82,28 +78,23 @@ namespace DiscordIan.Module
         [Alias("rtn")]
         public async Task NextAsync()
         {
-            var cachedResponse = await _cache.GetStringAsync(CacheKey);
+            var cache = await _cache.Deserialize<CachedMovies>(CacheKey);
 
-            if (cachedResponse?.Length == 0 || cachedResponse == null)
+            if (cache == default)
             {
                 await ReplyAsync("No movies queued.");
             }
             else
             {
-                var cached = JsonSerializer.Deserialize<CachedMovies>(cachedResponse);
-                cached.LastViewedMovie++;
+                cache.LastViewedMovie++;
 
-                if (cached.MovieStubs.Search.Length > cached.LastViewedMovie)
+                if (cache.MovieStubs.Search.Length > cache.LastViewedMovie)
                 {
-                    await _cache.RemoveAsync(CacheKey);
-                    await _cache.SetStringAsync(CacheKey,
-                        JsonSerializer.Serialize(cached));
+                    await _cache.SetStringAsync(CacheKey, JsonSerializer.Serialize(cache));
 
-                    var movieResponse = await CallOMDB(cached.MovieStubs.Search[cached.LastViewedMovie].imdbID, _options.IanOmdbEndpoint);
+                    var movieResponse = await CallOMDB(cache.MovieStubs.Search[cache.LastViewedMovie].imdbID, _options.IanOmdbEndpoint);
 
-                    await ReplyAsync(null,
-                        false,
-                        FormatOmdbResponse(movieResponse));
+                    await ReplyAsync(null, false, FormatOmdbResponse(movieResponse));
                 }
                 else
                 {
@@ -117,12 +108,12 @@ namespace DiscordIan.Module
 
         private async Task<Movie> GetExactMovieAsync(string input)
         {
-            string cachedMovie = await _cache.GetStringAsync(
-                string.Format(Cache.Omdb, input.Trim()));
+            var cache = await _cache.Deserialize<Movie>(string.Format(Cache.Omdb, input.Trim()));
+
             Movie movieResponse;
             var year = ParseInputForYear(ref input);
 
-            if (string.IsNullOrEmpty(cachedMovie))
+            if (cache == default)
             {
                 var endpoint = _options.IanOmdbExactEndpoint;
 
@@ -135,12 +126,7 @@ namespace DiscordIan.Module
             }
             else
             {
-                movieResponse = JsonSerializer.Deserialize<Movie>(
-                    cachedMovie,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
+                movieResponse = cache;
             }
 
             return movieResponse;
@@ -148,11 +134,11 @@ namespace DiscordIan.Module
 
         private async Task<Movie> SearchMovieAsync(string input)
         {
-            var cachedResponse = await _cache.GetStringAsync(
-                string.Format(Cache.OmdbStubs, input.Trim()));
+            var cache = await _cache.Deserialize<CachedMovies>(string.Format(Cache.OmdbStubs, input.Trim()));
+
             OmdbStub stubResponse;
 
-            if (string.IsNullOrEmpty(cachedResponse))
+            if (cache == default)
             {
                 try
                 {
@@ -166,14 +152,7 @@ namespace DiscordIan.Module
             }
             else
             {
-                var cacheStub = JsonSerializer.Deserialize<CachedMovies>(
-                    cachedResponse,
-                    new JsonSerializerOptions
-                    {
-                        PropertyNameCaseInsensitive = true
-                    });
-
-                stubResponse = cacheStub.MovieStubs;
+                stubResponse = cache.MovieStubs;
             }
 
             if (stubResponse?.Response != "True")
@@ -194,10 +173,9 @@ namespace DiscordIan.Module
                 Movie movieResponse;
                 var imdbID = stubResponse.Search[0].imdbID;
 
-                string cachedMovie = await _cache.GetStringAsync(
-                    string.Format(Cache.Omdb, imdbID.Trim()));
+                var cachedMovie = await _cache.Deserialize<Movie>(string.Format(Cache.Omdb, imdbID.Trim()));
 
-                if (string.IsNullOrEmpty(cachedMovie))
+                if (cachedMovie == default)
                 {
                     try
                     {
@@ -211,12 +189,7 @@ namespace DiscordIan.Module
                 }
                 else
                 {
-                    movieResponse = JsonSerializer.Deserialize<Movie>(
-                        cachedMovie,
-                        new JsonSerializerOptions
-                        {
-                            PropertyNameCaseInsensitive = true
-                        });
+                    movieResponse = cachedMovie;
                 }
 
                 return movieResponse;
@@ -260,7 +233,7 @@ namespace DiscordIan.Module
                     return data;
                 }
 
-                data.Search = 
+                data.Search =
                     data.Search
                     .Where(m => m.Title.ToLower() == input.ToLower())
                     .Concat(data.Search.Where(m => m.Title.ToLower() != input.ToLower()))
@@ -353,7 +326,7 @@ namespace DiscordIan.Module
                 ThumbnailUrl = response?.Poster.ValidateUri(),
                 Fields = new List<EmbedFieldBuilder>()
                     {
-                        EmbedHelper.MakeField("Released:", 
+                        EmbedHelper.MakeField("Released:",
                             DateHelper.ToWesternDate(response.Released)),
                         EmbedHelper.MakeField("Actors:", response.Actors.WordSwap(_cache)),
                         EmbedHelper.MakeField("Ratings:", ratings.ToString().Trim())

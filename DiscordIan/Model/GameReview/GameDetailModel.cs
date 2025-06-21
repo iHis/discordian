@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using Newtonsoft.Json;
 
 namespace DiscordIan.Model.GameReview
@@ -52,7 +51,7 @@ namespace DiscordIan.Model.GameReview
             public double Screenshots_Count { get; set; }
 
             public double Movies_Count { get; set; }
-            
+
             public double Creators_Count { get; set; }
 
             public double Achievements_Count { get; set; }

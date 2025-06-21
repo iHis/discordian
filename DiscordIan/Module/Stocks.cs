@@ -5,11 +5,11 @@ using System.Threading.Tasks;
 using System.Web;
 using Discord;
 using Discord.Commands;
+using DiscordIan.Helper;
 using DiscordIan.Model.Stocks;
 using DiscordIan.Service;
-using DiscordIan.Helper;
-using Microsoft.Extensions.Options;
 using Microsoft.Extensions.Caching.Distributed;
+using Microsoft.Extensions.Options;
 
 namespace DiscordIan.Module
 {
@@ -139,7 +139,7 @@ namespace DiscordIan.Module
             var changeString = new StringBuilder()
                 .AppendLine("```diff")
                 .AppendLine(PriceChangeToString(
-                    Quote.Current, 
+                    Quote.Current,
                     Quote.PreviousClose))
                 .Append("```").ToString().Trim();
 
@@ -153,20 +153,20 @@ namespace DiscordIan.Module
                 Url = Company?.Weburl.ValidateUri(),
                 ThumbnailUrl = Company?.Logo.ValidateUri(),
                 Fields = new List<EmbedFieldBuilder>() {
-                    EmbedHelper.MakeField("Price:", 
+                    EmbedHelper.MakeField("Price:",
                         Quote.Current.ToString()),
-                    EmbedHelper.MakeField("Prev Close:", 
-                        Quote.PreviousClose.ToString(), 
+                    EmbedHelper.MakeField("Prev Close:",
+                        Quote.PreviousClose.ToString(),
                         true),
-                    EmbedHelper.MakeField("Low:", 
-                        Quote.Low.ToString(), 
+                    EmbedHelper.MakeField("Low:",
+                        Quote.Low.ToString(),
                         true),
-                    EmbedHelper.MakeField("High:", 
-                        Quote.High.ToString(), 
+                    EmbedHelper.MakeField("High:",
+                        Quote.High.ToString(),
                         true),
-                    EmbedHelper.MakeField("Change:", 
+                    EmbedHelper.MakeField("Change:",
                         changeString),
-                    EmbedHelper.MakeField("Updated:", 
+                    EmbedHelper.MakeField("Updated:",
                         DateHelper.UnixTimeToDate(Quote.Timestamp))
                 }
             }.Build();

@@ -1,13 +1,12 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
 using Discord;
 using Discord.Commands;
 using DiscordIan.Helper;
+using DiscordIan.Key;
 using DiscordIan.Model.MapQuest;
 using DiscordIan.Model.Weather;
 using DiscordIan.Service;
@@ -52,11 +51,12 @@ namespace DiscordIan.Module
                 location = defaultLoc;
             }
 
-            string coords = await _cache.GetStringAsync(location);
-            string locale = null;
+            var coords = await _cache.GetStringAsync(string.Format(Cache.Weather, location));
+            var locale = string.Empty;
+
             if (!string.IsNullOrEmpty(coords))
             {
-                locale = await _cache.GetStringAsync(coords);
+                locale = await _cache.GetStringAsync(string.Format(Cache.Weather, coords));
             }
 
             if (string.IsNullOrEmpty(coords) || string.IsNullOrEmpty(locale))
@@ -67,9 +67,9 @@ namespace DiscordIan.Module
 
                     if (!string.IsNullOrEmpty(coords) && !string.IsNullOrEmpty(locale))
                     {
-                        await _cache.SetStringAsync(location, coords);
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, location), coords);
 
-                        await _cache.SetStringAsync(coords, locale);
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, coords), locale);
                     }
                 }
                 catch (Exception)
@@ -150,11 +150,12 @@ namespace DiscordIan.Module
                 location = defaultLoc;
             }
 
-            string coords = await _cache.GetStringAsync(location);
-            string locale = null;
+            var coords = await _cache.GetStringAsync(string.Format(Cache.Weather, location));
+            var locale = string.Empty;
+
             if (!string.IsNullOrEmpty(coords))
             {
-                locale = await _cache.GetStringAsync(coords);
+                locale = await _cache.GetStringAsync(string.Format(Cache.Weather, coords));
             }
 
             if (string.IsNullOrEmpty(coords) || string.IsNullOrEmpty(locale))
@@ -165,9 +166,9 @@ namespace DiscordIan.Module
 
                     if (!string.IsNullOrEmpty(coords) && !string.IsNullOrEmpty(locale))
                     {
-                        await _cache.SetStringAsync(location, coords);
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, location), coords);
 
-                        await _cache.SetStringAsync(coords, locale);
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, coords), locale);
                     }
                 }
                 catch (Exception)
@@ -182,10 +183,7 @@ namespace DiscordIan.Module
             }
             else
             {
-                Embed embed = null;
-                string filePath = null;
-
-                (embed, filePath) = await GetMeteoSourceResultAsync(coords, locale ?? location);
+                var (embed, filePath) = await GetMeteoSourceResultAsync(coords, locale ?? location);
 
                 if (embed == null)
                 {
@@ -195,7 +193,7 @@ namespace DiscordIan.Module
                 {
                     await Context.Channel.SendFileAsync(filePath, null, false, embed);
                 }
-            }                
+            }
 
             HistoryAdd(_cache, GetType().Name, location, apiTiming);
         }
@@ -204,7 +202,7 @@ namespace DiscordIan.Module
         [Summary("Set your default weather location.")]
         [Alias("ws")]
         public async Task SetWeatherCode([Summary("The address or location for current weather conditions")] string location = null)
-        { 
+        {
             if (string.IsNullOrEmpty(location))
             {
                 await ReplyAsync("Please include a location to set.");
@@ -318,14 +316,14 @@ namespace DiscordIan.Module
                 var locale = string.Format("{0}, {1}", data.City.Name, data.City.Country);
                 var latlong = string.Format("{0},{1}", data.City.Coord.Lat, data.City.Coord.Lon);
 
-                await _cache.SetStringAsync(input,
+                await _cache.SetStringAsync(string.Format(Cache.Weather, input),
                     latlong,
                     new DistributedCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4)
                     });
 
-                await _cache.SetStringAsync(latlong,
+                await _cache.SetStringAsync(string.Format(Cache.Weather, latlong),
                     locale,
                     new DistributedCacheEntryOptions
                     {
@@ -414,8 +412,8 @@ namespace DiscordIan.Module
 
             if (response.IsSuccessful)
             {
-                return Context.Message.Content.StartsWith("!f") 
-                    ? FormatDayForecast(response.Data) 
+                return Context.Message.Content.StartsWith("!f")
+                    ? FormatDayForecast(response.Data)
                     : FormatResultsCommon(CommonWeatherDTOMap(response.Data));
             }
 
@@ -500,7 +498,7 @@ namespace DiscordIan.Module
             return sb.ToString().Trim();
         }
 
-        private CommonWeatherModel CommonWeatherDTOMap<T> (T weather)
+        private CommonWeatherModel CommonWeatherDTOMap<T>(T weather)
         {
             var matchType = typeof(T);
             if (matchType == typeof(WeatherApiModel))
@@ -562,7 +560,7 @@ namespace DiscordIan.Module
                         TempHigh = $"{data.Daily.Data[0].AllDay.TemperatureMax}{tempUnit}",
                         TempLow = $"{data.Daily.Data[0].AllDay.TemperatureMin}{tempUnit}",
                         PrecipChance = $"{data.Daily.Data[0].AllDay.Precipitation.Type.ToTitleCase()}" +
-                            $"{(data.Daily.Data[0].AllDay.Precipitation.Type != "none" ? $" {100*data.Daily.Data[0].AllDay.Precipitation.Total}%" : "")}"
+                            $"{(data.Daily.Data[0].AllDay.Precipitation.Type != "none" ? $" {100 * data.Daily.Data[0].AllDay.Precipitation.Total}%" : "")}"
                     }
                 };
 
@@ -607,8 +605,8 @@ namespace DiscordIan.Module
             return new EmbedBuilder()
             {
                 Color = Color.Purple,
-                Title = (data.Location.Country == "United States of America" || data.Location.Country == "USA") 
-                    ? $"{data.Location.Name}, {data.Location.Region}" 
+                Title = (data.Location.Country == "United States of America" || data.Location.Country == "USA")
+                    ? $"{data.Location.Name}, {data.Location.Region}"
                     : $"{data.Location.Name}, {data.Location.Country}",
                 Fields = new List<EmbedFieldBuilder>() {
                     EmbedHelper.MakeField($"**{DateTime.Parse(data.Forecast.Forecastday[0].Date).DayOfWeek}\n{data.Forecast.Forecastday[0].Date}**",

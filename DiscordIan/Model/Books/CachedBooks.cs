@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DiscordIan.Model
+﻿namespace DiscordIan.Model
 {
     public class CachedBooks
     {

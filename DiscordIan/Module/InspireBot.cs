@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using DiscordIan.Service;
@@ -16,7 +15,7 @@ namespace DiscordIan.Module
         private readonly Model.Options _options;
         private TimeSpan apiTiming = new TimeSpan();
 
-        public InspireBot(IDistributedCache cache, 
+        public InspireBot(IDistributedCache cache,
             FetchService fetchService,
             IOptionsMonitor<Model.Options> optionsAccessor)
         {

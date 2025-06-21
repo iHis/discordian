@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.ComponentModel;
 using System.IO;
 using System.Linq;
-using System.Reflection;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
 using DiscordIan.Helper;
+using DiscordIan.Key;
 using DiscordIan.Model.ImageAI;
 using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
@@ -66,7 +65,7 @@ namespace DiscordIan.Module
 
         [Command("imgnext", RunMode = RunMode.Async)]
         [Summary("Run again with new seed.")]
-        public async Task GetAnotherImage()
+        public async Task GetAnotherImage([Summary("Model")] string model = null)
         {
             if (Context.User.IsNaughty())
             {
@@ -74,29 +73,29 @@ namespace DiscordIan.Module
                 return;
             }
 
-            var cachedString = await _cache.GetStringAsync(ImgKey);
+            var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
 
-            if (!string.IsNullOrEmpty(cachedString))
+            if (cache != default)
             {
                 var userId = Context.User.Id;
                 var channelId = Context.Channel.Id;
-                var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
 
-                if (list != null)
+                var msg = cache.OrderByDescending(l => l.Timestamp).FirstOrDefault(l => l.ChannelId == channelId);
+
+                if (msg != null)
                 {
-                    var msg = list.OrderByDescending(l => l.Timestamp).FirstOrDefault(l => l.ChannelId == channelId);
-
-                    if (msg != null)
+                    try
                     {
-                        try
-                        {
-                            msg.Request.Seed = new Random().Next(1, 99999).ToString();
-                            await CallImageService(msg.Request);
-                        }
-                        catch (Exception ex)
-                        {
-                            await ReplyAsync(ex.Message);
-                        }
+                        msg.Request.Seed = new Random().Next(1, 99999).ToString();
+                        msg.Request.Model = model == "flux" || model == "turbo"
+                            ? model
+                            : msg.Request.Model;
+
+                        await CallImageService(msg.Request);
+                    }
+                    catch (Exception ex)
+                    {
+                        await ReplyAsync(ex.Message);
                     }
                 }
             }
@@ -107,24 +106,23 @@ namespace DiscordIan.Module
         [Alias("nope")]
         public async Task DeleteLastImage()
         {
-            var cachedString = await _cache.GetStringAsync(ImgKey);
+            var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
             var messageRef = Context.Message.ReferencedMessage;
             var model = new ImgCacheModel();
 
-            if (string.IsNullOrEmpty(cachedString) && messageRef == null)
+            if (cache == default && messageRef == null)
             {
                 return;
             }
 
-            if (!string.IsNullOrEmpty(cachedString) && messageRef == null)
+            if (cache != default && messageRef == null)
             {
-                var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
-                model = list.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id);
+                model = cache.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id);
             }
 
             if (messageRef != null)
             {
-                if (messageRef.Author.Id == _client.CurrentUser.Id 
+                if (messageRef.Author.Id == _client.CurrentUser.Id
                     && messageRef.Embeds.Any()
                     && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
                 {
@@ -136,7 +134,7 @@ namespace DiscordIan.Module
             {
                 var channel = _client.GetChannel(model.ChannelId) as ITextChannel;
                 var message = await channel.GetMessageAsync(model.MessageId);
-                
+
                 if (message != null)
                 {
                     await channel.DeleteMessageAsync(model.MessageId);
@@ -173,7 +171,7 @@ namespace DiscordIan.Module
                     };
 
                     var channel = _client.GetChannel(QuakeChannel) as ISocketMessageChannel;
-                    
+
                     await channel.SendMessageAsync("", false, embed.Build());
 
                     return;
@@ -181,13 +179,11 @@ namespace DiscordIan.Module
             }
             else
             {
-                var cachedString = await _cache.GetStringAsync(ImgKey);
+                var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
 
-                if (!string.IsNullOrEmpty(cachedString))
+                if (cache != default)
                 {
-                    var list = JsonConvert.DeserializeObject<List<ImgCacheModel>>(cachedString);
-
-                    var model = list.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id)?.Request;
+                    var model = cache.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id)?.Request;
 
                     if (model != null && !string.IsNullOrEmpty(model.Prompt))
                     {
@@ -209,8 +205,8 @@ namespace DiscordIan.Module
 
             if (response.IsSuccessful)
             {
-                var channel = channelId != null 
-                    ? _client.GetChannel((ulong)channelId) as ISocketMessageChannel 
+                var channel = channelId != null
+                    ? _client.GetChannel((ulong)channelId) as ISocketMessageChannel
                     : Context.Channel;
 
                 using var stream = new MemoryStream();
@@ -218,8 +214,8 @@ namespace DiscordIan.Module
                 stream.Seek(0, SeekOrigin.Begin);
                 response.Data.Dispose();
                 var message = await channel.SendFileAsync(
-                    stream, 
-                    "image.jpeg", 
+                    stream,
+                    "image.jpeg",
                     $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {Context.User.Username}" : "")}");
 
                 ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
@@ -234,14 +230,9 @@ namespace DiscordIan.Module
 
         private ImgRequestModel ParseCommandArgs(string prompt)
         {
-            var args = new Dictionary<string, string> {
-                { "seed", "-seed [0-9]{1,10}" },
-                { "model", "-model (flux|turbo|gptimage)" }
-            };
-
             var model = new ImgRequestModel { Prompt = prompt };
-            var seedMatch = new Regex(args["seed"]).Match(prompt);
-            var modelMatch = new Regex(args["model"]).Match(prompt);
+            var seedMatch = new Regex("-seed [0-9]{1,10}", RegexOptions.IgnoreCase).Match(prompt);
+            var modelMatch = new Regex("-model (flux|turbo)", RegexOptions.IgnoreCase).Match(prompt);
 
             if (seedMatch.Success)
             {
@@ -261,6 +252,35 @@ namespace DiscordIan.Module
             }
 
             return model;
+        }
+
+        private async void ImgCache(IDistributedCache _cache, ulong userId, ulong channelId, ulong messageId, ImgRequestModel request)
+        {
+            var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, channelId));
+            var item = new ImgCacheModel
+            {
+                Timestamp = DateTime.Now,
+                UserId = userId,
+                ChannelId = channelId,
+                MessageId = messageId,
+                Request = request
+            };
+
+            if (cache == default)
+            {
+                var list = new List<ImgCacheModel> { item };
+
+                await _cache.SetStringAsync(string.Format(Cache.ImgAi, channelId),
+                    JsonConvert.SerializeObject(list));
+            }
+            else
+            {
+                cache.RemoveAll(l => l.ChannelId == channelId && l.UserId == userId);
+                cache.Add(item);
+
+                await _cache.SetStringAsync(string.Format(Cache.ImgAi, channelId),
+                    JsonConvert.SerializeObject(cache));
+            }
         }
     }
 }
