@@ -1,12 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text.Json;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using DiscordIan.Helper;
+using DiscordIan.Key;
 using DiscordIan.Model;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Module
 {
@@ -14,13 +16,14 @@ namespace DiscordIan.Module
     {
         private const int MaxReplyLength = 2000;
         private const string ForgetIt = "\u2026 never mind, I'm tired of typing";
-        private const string HistoryKey = "History";
+        public const ulong ImgChannel = 1052342379643940864;
+        public const ulong QuakeChannel = 633650348195577857;
 
         protected override async Task<IUserMessage> ReplyAsync(string message = null,
             bool isTTS = false,
             Embed embed = null,
             RequestOptions options = null,
-            AllowedMentions allowedMentions = null, 
+            AllowedMentions allowedMentions = null,
             MessageReference messageReference = null)
         {
             string response = message;
@@ -47,7 +50,7 @@ namespace DiscordIan.Module
             return await base.ReplyAsync(response, isTTS, embed, options);
         }
 
-        public async void HistoryAdd(IDistributedCache cache, string service, string input, TimeSpan time)
+        public async void HistoryAdd(IDistributedCache _cache, string service, string input, TimeSpan time)
         {
             var user = Context.User.Username;
 
@@ -60,32 +63,29 @@ namespace DiscordIan.Module
                 AddDate = DateTime.Now
             };
 
-            var cachedString = await cache.GetStringAsync(HistoryKey);
+            var cache = await _cache.Deserialize<HistoryModel>(Cache.History);
 
-            if (string.IsNullOrEmpty(cachedString))
+            if (cache == default)
             {
                 var history = new HistoryModel
                 {
                     HistoryList = new List<HistoryItem> { historyItem }
                 };
 
-                await cache.SetStringAsync(HistoryKey,
-                    JsonSerializer.Serialize(history));
+                await _cache.SetStringAsync(Cache.History, JsonConvert.SerializeObject(history));
             }
             else
             {
-                var history = JsonSerializer.Deserialize<HistoryModel>(cachedString);
-                history.HistoryList.Add(historyItem);
+                cache.HistoryList.Add(historyItem);
 
-                var pastUserHist = history.HistoryList.Where(h => h.UserName == user);
+                var pastUserHist = cache.HistoryList.Where(h => h.UserName == user);
 
                 if (pastUserHist.Count() > 10)
                 {
-                    history.HistoryList.RemoveAt(0);
+                    cache.HistoryList.RemoveAt(0);
                 }
 
-                await cache.SetStringAsync(HistoryKey,
-                    JsonSerializer.Serialize(history));
+                await _cache.SetStringAsync(Cache.History, JsonConvert.SerializeObject(cache));
             }
         }
     }

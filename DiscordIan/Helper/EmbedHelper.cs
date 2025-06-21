@@ -20,6 +20,16 @@ namespace DiscordIan.Helper
             };
         }
 
+        public static EmbedFieldBuilder EmptyField()
+        {
+            return new EmbedFieldBuilder()
+            {
+                Name = "\u200B",
+                Value = "\u200B",
+                IsInline = false
+            };
+        }
+
         public static EmbedAuthorBuilder MakeAuthor(string name, string url = null, string icon = null)
         {
             if (string.IsNullOrEmpty(name))

@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-
-namespace DiscordIan.Model.Omdb
+﻿namespace DiscordIan.Model.Omdb
 {
     public class OmdbStub
     {

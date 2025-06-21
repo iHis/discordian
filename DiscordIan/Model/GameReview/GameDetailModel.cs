@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Model.GameReview
 {
@@ -52,7 +51,7 @@ namespace DiscordIan.Model.GameReview
             public double Screenshots_Count { get; set; }
 
             public double Movies_Count { get; set; }
-            
+
             public double Creators_Count { get; set; }
 
             public double Achievements_Count { get; set; }
@@ -135,7 +134,7 @@ namespace DiscordIan.Model.GameReview
 
         public partial class Clip
         {
-            [JsonPropertyName("clip")]
+            [JsonProperty("clip")]
             public Uri ClipClip { get; set; }
 
             public Clips Clips { get; set; }
@@ -147,10 +146,10 @@ namespace DiscordIan.Model.GameReview
 
         public partial class Clips
         {
-            [JsonPropertyName("320")]
+            [JsonProperty("320")]
             public Uri The320 { get; set; }
 
-            [JsonPropertyName("640")]
+            [JsonProperty("640")]
             public Uri The640 { get; set; }
 
             public Uri Full { get; set; }
@@ -257,7 +256,7 @@ namespace DiscordIan.Model.GameReview
 
             public Uri Url { get; set; }
 
-            [JsonPropertyName("store")]
+            [JsonProperty("store")]
             public Developer StoreStore { get; set; }
         }
     }

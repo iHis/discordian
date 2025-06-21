@@ -3,10 +3,12 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 using System.Web;
+using Discord;
 using Discord.Commands;
 using DiscordIan.Helper;
+using DiscordIan.Key;
 using DiscordIan.Model.MapQuest;
-using DiscordIan.Model.OpenWeatherMap;
+using DiscordIan.Model.Weather;
 using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
@@ -31,23 +33,30 @@ namespace DiscordIan.Module
                 ?? throw new ArgumentNullException(nameof(optionsAccessor));
         }
 
-        [Command("wz", RunMode = RunMode.Async)]
+        [Command("wold", RunMode = RunMode.Async)]
         [Summary("Look up current weather for a provided address.")]
-        [Alias("weather", "w", "wx")]
-        public async Task CurrentAsync([Remainder]
-            [Summary("The address or location for current weather conditions")] string location)
+        [Alias("w2")]
+        public async Task OpenWeatherMapCurrentAsync([Remainder]
+            [Summary("The address or location for current weather conditions")] string location = null)
         {
-            string coords = await _cache.GetStringAsync(location);
-            string locale = null;
-            if (!string.IsNullOrEmpty(coords))
+            if (string.IsNullOrEmpty(location))
             {
-                locale = await _cache.GetStringAsync(coords);
+                var defaultLoc = SqliteHelper.SelectWeatherDefault(Context.User.Id.ToString());
+                if (string.IsNullOrEmpty(defaultLoc))
+                {
+                    await ReplyAsync("No location provided and no default found.  Provide a location or set a default first using !wset or !ws.");
+                    return;
+                }
+
+                location = defaultLoc;
             }
 
-            if (string.IsNullOrEmpty(coords) && string.IsNullOrEmpty(location))
+            var coords = await _cache.GetStringAsync(string.Format(Cache.Weather, location));
+            var locale = string.Empty;
+
+            if (!string.IsNullOrEmpty(coords))
             {
-                await ReplyAsync("Please provide a location.");
-                return;
+                locale = await _cache.GetStringAsync(string.Format(Cache.Weather, coords));
             }
 
             if (string.IsNullOrEmpty(coords) || string.IsNullOrEmpty(locale))
@@ -58,9 +67,9 @@ namespace DiscordIan.Module
 
                     if (!string.IsNullOrEmpty(coords) && !string.IsNullOrEmpty(locale))
                     {
-                        await _cache.SetStringAsync(location, coords);
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, location), coords);
 
-                        await _cache.SetStringAsync(coords, locale);
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, coords), locale);
                     }
                 }
                 catch (Exception)
@@ -70,15 +79,14 @@ namespace DiscordIan.Module
             }
 
             string message;
-            Discord.Embed embed;
 
             if (string.IsNullOrEmpty(coords) || string.IsNullOrEmpty(locale))
             {
-                (message, embed) = await GetWeatherResultAsync(location);
+                message = await GetOpenWeatherMapResultAsync(location);
             }
             else
             {
-                (message, embed) = await GetWeatherResultAsync(coords, locale);
+                message = await GetOpenWeatherMapResultAsync(coords, locale);
             }
 
             if (string.IsNullOrEmpty(message))
@@ -87,14 +95,155 @@ namespace DiscordIan.Module
             }
             else
             {
-                await ReplyAsync(message.WordSwap(_cache), false, embed);
+                await ReplyAsync(message.WordSwap(_cache), false, null);
             }
 
             HistoryAdd(_cache, GetType().Name, location, apiTiming);
         }
 
-        private async Task<(string, Discord.Embed)>
-            GetWeatherResultAsync(string coordinates, string location)
+        [Command("w", RunMode = RunMode.Async)]
+        [Summary("Look up current weather for a provided address.")]
+        [Alias("weather", "f", "forecast")]
+        public async Task WeatherApiCurrentAsync([Remainder]
+            [Summary("The address or location for current weather conditions")] string location = null)
+        {
+            if (string.IsNullOrEmpty(location))
+            {
+                var defaultLoc = SqliteHelper.SelectWeatherDefault(Context.User.Id.ToString());
+                if (string.IsNullOrEmpty(defaultLoc))
+                {
+                    await ReplyAsync("No location provided and no default found.  Provide a location or set a default first using !wset or !ws.");
+                    return;
+                }
+
+                location = defaultLoc;
+            }
+
+            var embed = await GetWeatherApiResultsAsync(location);
+
+            if (embed == null)
+            {
+                await ReplyAsync("No weather found, sorry!");
+            }
+            else
+            {
+                await ReplyAsync(null, false, embed);
+            }
+
+            HistoryAdd(_cache, GetType().Name, location, apiTiming);
+        }
+
+        [Command("w3", RunMode = RunMode.Async)]
+        [Summary("Look up current weather for a provided address.")]
+        public async Task MeteoSourceCurrentAsync([Remainder]
+            [Summary("The address or location for current weather conditions")] string location = null)
+        {
+            if (string.IsNullOrEmpty(location))
+            {
+                var defaultLoc = SqliteHelper.SelectWeatherDefault(Context.User.Id.ToString());
+                if (string.IsNullOrEmpty(defaultLoc))
+                {
+                    await ReplyAsync("No location provided and no default found.  Provide a location or set a default first using !wset or !ws.");
+                    return;
+                }
+
+                location = defaultLoc;
+            }
+
+            var coords = await _cache.GetStringAsync(string.Format(Cache.Weather, location));
+            var locale = string.Empty;
+
+            if (!string.IsNullOrEmpty(coords))
+            {
+                locale = await _cache.GetStringAsync(string.Format(Cache.Weather, coords));
+            }
+
+            if (string.IsNullOrEmpty(coords) || string.IsNullOrEmpty(locale))
+            {
+                try
+                {
+                    (coords, locale) = await GeocodeAddressAsync(location);
+
+                    if (!string.IsNullOrEmpty(coords) && !string.IsNullOrEmpty(locale))
+                    {
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, location), coords);
+
+                        await _cache.SetStringAsync(string.Format(Cache.Weather, coords), locale);
+                    }
+                }
+                catch (Exception)
+                {
+                    //Geocode failed, revert to OpenWeatherMap's built-in resolve.
+                }
+            }
+
+            if (string.IsNullOrEmpty(coords))
+            {
+                await ReplyAsync("Location not found.");
+            }
+            else
+            {
+                var (embed, filePath) = await GetMeteoSourceResultAsync(coords, locale ?? location);
+
+                if (embed == null)
+                {
+                    await ReplyAsync("No weather found, sorry!");
+                }
+                else
+                {
+                    await Context.Channel.SendFileAsync(filePath, null, false, embed);
+                }
+            }
+
+            HistoryAdd(_cache, GetType().Name, location, apiTiming);
+        }
+
+        [Command("wset", RunMode = RunMode.Async)]
+        [Summary("Set your default weather location.")]
+        [Alias("ws")]
+        public async Task SetWeatherCode([Summary("The address or location for current weather conditions")] string location = null)
+        {
+            if (string.IsNullOrEmpty(location))
+            {
+                await ReplyAsync("Please include a location to set.");
+                return;
+            }
+
+            location = location.ToLower();
+
+            SqliteHelper.InsertWeather(Context.User.Id.ToString(), Context.User.Username, location);
+
+            await ReplyAsync($"Default weather location for {Context.User.Username} set to {location}.");
+
+            HistoryAdd(_cache, GetType().Name, location, apiTiming);
+        }
+
+        [Command("wpeek", RunMode = RunMode.Async)]
+        [Summary("See your default weather location.")]
+        public async Task PeekWeatherCode([Summary("User to peek, blank for yourself")] string user = null)
+        {
+            string location;
+
+            if (string.IsNullOrEmpty(user))
+            {
+                location = SqliteHelper.SelectWeatherDefault(Context.User.Id.ToString());
+            }
+            else
+            {
+                location = SqliteHelper.SelectWeatherDefaultByName(user);
+            }
+
+            if (string.IsNullOrEmpty(location))
+            {
+                await ReplyAsync("No default location found.");
+                return;
+            }
+
+            await ReplyAsync($"{user ?? Context.User.Username}: {location}");
+            return;
+        }
+
+        private async Task<string> GetOpenWeatherMapResultAsync(string coordinates, string location)
         {
             var headers = new Dictionary<string, string>
             {
@@ -140,13 +289,13 @@ namespace DiscordIan.Module
                     message = FormatResults(currentData, location);
                 }
 
-                return (message, null);
+                return message;
             }
 
-            return (null, null);
+            return null;
         }
 
-        private async Task<(string, Discord.Embed)> GetWeatherResultAsync(string input)
+        private async Task<string> GetOpenWeatherMapResultAsync(string input)
         {
             var headers = new Dictionary<string, string>
             {
@@ -167,14 +316,14 @@ namespace DiscordIan.Module
                 var locale = string.Format("{0}, {1}", data.City.Name, data.City.Country);
                 var latlong = string.Format("{0},{1}", data.City.Coord.Lat, data.City.Coord.Lon);
 
-                await _cache.SetStringAsync(input,
+                await _cache.SetStringAsync(string.Format(Cache.Weather, input),
                     latlong,
                     new DistributedCacheEntryOptions
                     {
                         AbsoluteExpirationRelativeToNow = TimeSpan.FromHours(4)
                     });
 
-                await _cache.SetStringAsync(latlong,
+                await _cache.SetStringAsync(string.Format(Cache.Weather, latlong),
                     locale,
                     new DistributedCacheEntryOptions
                     {
@@ -183,10 +332,10 @@ namespace DiscordIan.Module
 
                 string message = FormatResults(data, locale);
 
-                return (message, null);
+                return message;
             }
 
-            return (null, null);
+            return null;
         }
 
         private async Task<(string, string)> GeocodeAddressAsync(string location)
@@ -246,6 +395,59 @@ namespace DiscordIan.Module
             return (null, null);
         }
 
+        private async Task<Embed> GetWeatherApiResultsAsync(string input)
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "User-Agent", "DiscorIan Discord bot" }
+            };
+
+            var uri = new Uri(string.Format(_options.WeatherApiEndpoint,
+                _options.WeatherApiKey,
+                HttpUtility.UrlEncode(input)));
+
+            var response = await _fetchService
+                .GetAsync<WeatherApiModel>(uri, headers);
+            apiTiming += response.Elapsed;
+
+            if (response.IsSuccessful)
+            {
+                return Context.Message.Content.StartsWith("!f")
+                    ? FormatDayForecast(response.Data)
+                    : FormatResultsCommon(CommonWeatherDTOMap(response.Data));
+            }
+
+            return null;
+        }
+
+        private async Task<(Embed, string)> GetMeteoSourceResultAsync(string coords, string locale)
+        {
+            var headers = new Dictionary<string, string>
+            {
+                { "User-Agent", "DiscorIan Discord bot" }
+            };
+
+            var uri = new Uri(string.Format(_options.MeteoSourceEndpoint,
+                coords.Split(',')[0],
+                coords.Split(',')[1],
+                _options.MeteoSourceKey));
+
+            var response = await _fetchService
+                .GetAsync<MeteoSourceModel>(uri, headers);
+            apiTiming += response.Elapsed;
+
+            if (response.IsSuccessful)
+            {
+                response.Data.Locale = locale;
+
+                var embed = FormatResultsCommon(CommonWeatherDTOMap(response.Data));
+
+                return (embed, $"Model/Weather/Icons/MeteoSource/set03/medium/{response.Data.Current.IconNum}.png");
+            }
+
+            return (null, null);
+        }
+
         private string FormatResults(WeatherCurrent.Current data,
             string location,
             WeatherForecast.Daily forecastData = null)
@@ -294,6 +496,149 @@ namespace DiscordIan.Module
             }
 
             return sb.ToString().Trim();
+        }
+
+        private CommonWeatherModel CommonWeatherDTOMap<T>(T weather)
+        {
+            var matchType = typeof(T);
+            if (matchType == typeof(WeatherApiModel))
+            {
+                var data = weather as WeatherApiModel;
+                var response = new CommonWeatherModel
+                {
+                    Region = (data.Location.Country == "United States of America" || data.Location.Country == "USA")
+                        ? $"{data.Location.Name}, {data.Location.Region}"
+                        : $"{data.Location.Name}, {data.Location.Country}",
+                    Current = new CommonWeatherModel_Current
+                    {
+                        Condition = data.Current.Condition.Text.ToTitleCase(),
+                        IconUrl = new Uri($"http:{data.Current.Condition.Icon}").ValidateUri(),
+                        Temp = $"{data.Current.TempF}F / {data.Current.TempC}C",
+                        FeelsLike = $"{data.Current.FeelslikeF}F / {data.Current.FeelslikeC}C",
+                        Humidity = $"{data.Current.Humidity}%"
+                    },
+                    Wind = new CommonWeatherModel_Wind
+                    {
+                        Speed = $"{data.Current.WindMph}mph / {data.Current.WindKph}kph",
+                        Direction = data.Current.WindDir
+                    },
+                    Forecast = new CommonWeatherModel_Forecast
+                    {
+                        Condition = data.Forecast.Forecastday[0].Day.Condition.Text.ToTitleCase(),
+                        TempHigh = $"{data.Forecast.Forecastday[0].Day.MaxtempF}F / {data.Forecast.Forecastday[0].Day.MaxtempC}C",
+                        TempLow = $"{data.Forecast.Forecastday[0].Day.MintempF}F / {data.Forecast.Forecastday[0].Day.MintempC}C",
+                        PrecipChance = $"Rain {data.Forecast.Forecastday[0].Day.DailyChanceOfRain}%, Snow {data.Forecast.Forecastday[0].Day.DailyChanceOfSnow}%"
+                    },
+                    Footer = $"Last Updated: {data.Current.LastUpdated}"
+                };
+
+                return response;
+            }
+
+            if (matchType == typeof(MeteoSourceModel))
+            {
+                var data = weather as MeteoSourceModel;
+                var tempUnit = data.Units == "us" ? "F" : "C";
+                var speedUnit = data.Units == "us" ? "mph" : "kph";
+                var response = new CommonWeatherModel
+                {
+                    Region = data.Locale,
+                    Current = new CommonWeatherModel_Current
+                    {
+                        Condition = data.Current.Summary.ToTitleCase(),
+                        IconUrl = $"attachment://{data.Current.IconNum}.png",
+                        Temp = $"{data.Current.Temperature}{tempUnit}"
+                    },
+                    Wind = new CommonWeatherModel_Wind
+                    {
+                        Speed = $"{data.Current.Wind.Speed}{speedUnit}",
+                        Direction = data.Current.Wind.Dir
+                    },
+                    Forecast = new CommonWeatherModel_Forecast
+                    {
+                        Condition = data.Daily.Data[0].Summary.ToTitleCase().Split("Temperature")[0],
+                        TempHigh = $"{data.Daily.Data[0].AllDay.TemperatureMax}{tempUnit}",
+                        TempLow = $"{data.Daily.Data[0].AllDay.TemperatureMin}{tempUnit}",
+                        PrecipChance = $"{data.Daily.Data[0].AllDay.Precipitation.Type.ToTitleCase()}" +
+                            $"{(data.Daily.Data[0].AllDay.Precipitation.Type != "none" ? $" {100 * data.Daily.Data[0].AllDay.Precipitation.Total}%" : "")}"
+                    }
+                };
+
+                return response;
+            }
+
+            return null;
+        }
+
+        private Embed FormatResultsCommon(CommonWeatherModel data)
+        {
+            var builder = new EmbedBuilder()
+            {
+                Color = Color.Blue,
+                Title = data.Region,
+                ThumbnailUrl = data.Current.IconUrl,
+                Fields = new List<EmbedFieldBuilder>() {
+                    EmbedHelper.MakeField($"Condition: **{data.Current.Condition}**",
+                        $"\u200B    **Temp:** {data.Current.Temp}"
+                        + (!string.IsNullOrEmpty(data.Current.FeelsLike) ? $"\n\u200B    **Feels Like:** {data.Current.FeelsLike}" : "")
+                        + (!string.IsNullOrEmpty(data.Current.Humidity) ? $"\n\u200B    **Humidity:** {data.Current.Humidity}" : "")),
+                    EmbedHelper.MakeField("Wind:",
+                        $"\u200B    **Speed:** {data.Wind.Speed}"
+                        + $"\n\u200B    **Direction:** {data.Wind.Direction}"),
+                    EmbedHelper.MakeField($"Forecast: **{data.Forecast.Condition}**",
+                        $"\u200B    **High:** {data.Forecast.TempHigh}"
+                        + $"\n\u200B    **Low:** {data.Forecast.TempLow}"
+                        + $"\n\u200B    **Precip. Chance:** {data.Forecast.PrecipChance}")
+                }
+            };
+
+            if (!string.IsNullOrEmpty(data.Footer))
+            {
+                builder.Footer = new EmbedFooterBuilder() { Text = data.Footer };
+            }
+
+            return builder.Build();
+        }
+
+        private Embed FormatDayForecast(WeatherApiModel data)
+        {
+            return new EmbedBuilder()
+            {
+                Color = Color.Purple,
+                Title = (data.Location.Country == "United States of America" || data.Location.Country == "USA")
+                    ? $"{data.Location.Name}, {data.Location.Region}"
+                    : $"{data.Location.Name}, {data.Location.Country}",
+                Fields = new List<EmbedFieldBuilder>() {
+                    EmbedHelper.MakeField($"**{DateTime.Parse(data.Forecast.Forecastday[0].Date).DayOfWeek}\n{data.Forecast.Forecastday[0].Date}**",
+                        $"**{data.Forecast.Forecastday[0].Day.Condition.Text.ToTitleCase()}**"
+                        + $"\n**High:** {data.Forecast.Forecastday[0].Day.MaxtempF}F / {data.Forecast.Forecastday[0].Day.MaxtempC}C"
+                        + $"\n**Low:** {data.Forecast.Forecastday[0].Day.MintempF}F / {data.Forecast.Forecastday[0].Day.MintempC}C"
+                        + $"\n**Chance of Rain:** {data.Forecast.Forecastday[0].Day.DailyChanceOfRain}%"
+                        + (data.Forecast.Forecastday[0].Day.DailyChanceOfSnow > 0
+                            ? $"\n**Chance of Snow:** {data.Forecast.Forecastday[0].Day.DailyChanceOfSnow}%"
+                            : ""),
+                        true),
+                    EmbedHelper.MakeField($"**{DateTime.Parse(data.Forecast.Forecastday[1].Date).DayOfWeek}\n{data.Forecast.Forecastday[1].Date}**",
+                        $"**{data.Forecast.Forecastday[1].Day.Condition.Text.ToTitleCase()}**"
+                        + $"\n**High:** {data.Forecast.Forecastday[1].Day.MaxtempF}F / {data.Forecast.Forecastday[1].Day.MaxtempC}C"
+                        + $"\n**Low:** {data.Forecast.Forecastday[1].Day.MintempF}F / {data.Forecast.Forecastday[1].Day.MintempC}C"
+                        + $"\n**Chance of Rain:** {data.Forecast.Forecastday[1].Day.DailyChanceOfRain}%"
+                        + (data.Forecast.Forecastday[1].Day.DailyChanceOfSnow > 0
+                            ? $"\n**Chance of Snow:** {data.Forecast.Forecastday[1].Day.DailyChanceOfSnow}%"
+                            : ""),
+                        true),
+                    EmbedHelper.MakeField($"**{DateTime.Parse(data.Forecast.Forecastday[2].Date).DayOfWeek}\n{data.Forecast.Forecastday[2].Date}**",
+                        $"**{data.Forecast.Forecastday[2].Day.Condition.Text.ToTitleCase()}**"
+                        + $"\n**High:** {data.Forecast.Forecastday[2].Day.MaxtempF}F / {data.Forecast.Forecastday[2].Day.MaxtempC}C"
+                        + $"\n**Low:** {data.Forecast.Forecastday[2].Day.MintempF}F / {data.Forecast.Forecastday[2].Day.MintempC}C"
+                        + $"\n**Chance of Rain:** {data.Forecast.Forecastday[2].Day.DailyChanceOfRain}%"
+                        + (data.Forecast.Forecastday[2].Day.DailyChanceOfSnow > 0
+                            ? $"\n**Chance of Snow:** {data.Forecast.Forecastday[2].Day.DailyChanceOfSnow}%"
+                            : ""),
+                        true)
+                },
+                Footer = new EmbedFooterBuilder() { Text = $"Last Updated: {data.Current.LastUpdated}" }
+            }.Build();
         }
 
         private string WeatherIcon(string iconCode)

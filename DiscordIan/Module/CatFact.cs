@@ -1,11 +1,7 @@
 ﻿using System;
-using System.Reflection;
-using System.Text.Json;
-using System.Text.Json.Serialization;
 using System.Threading.Tasks;
 using Discord.Commands;
 using DiscordIan.Helper;
-using DiscordIan.Key;
 using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;

@@ -1,5 +1,5 @@
 ﻿using System;
-using System.Text.Json.Serialization;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Model.Stocks
 {
@@ -12,22 +12,22 @@ namespace DiscordIan.Model.Stocks
 
     public class StockQuote
     {
-        [JsonPropertyName("c")]
+        [JsonProperty("c")]
         public double Current { get; set; }
 
-        [JsonPropertyName("h")]
+        [JsonProperty("h")]
         public double High { get; set; }
 
-        [JsonPropertyName("l")]
+        [JsonProperty("l")]
         public double Low { get; set; }
 
-        [JsonPropertyName("o")]
+        [JsonProperty("o")]
         public double Open { get; set; }
 
-        [JsonPropertyName("pc")]
+        [JsonProperty("pc")]
         public double PreviousClose { get; set; }
 
-        [JsonPropertyName("t")]
+        [JsonProperty("t")]
         public double Timestamp { get; set; }
     }
 

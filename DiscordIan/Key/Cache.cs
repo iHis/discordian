@@ -1,6 +1,4 @@
-﻿using System.Collections.Generic;
-
-namespace DiscordIan.Key
+﻿namespace DiscordIan.Key
 {
     public struct Cache
     {
@@ -10,5 +8,9 @@ namespace DiscordIan.Key
         public static readonly string WordSwap = "WordSwap";
         public static readonly string JerkCity = "jc.{0}";
         public static readonly string BookList = "book.{0}";
+        public static readonly string Quote = "quote.{0}";
+        public static readonly string History = "history";
+        public static readonly string ImgAi = "imgai.{0}";
+        public static readonly string Weather = "weather.{0}";
     }
 }

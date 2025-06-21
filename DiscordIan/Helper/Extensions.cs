@@ -1,12 +1,15 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Drawing;
 using System.Globalization;
-using System.IO;
-using System.Text.Json;
+using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
+using Discord.WebSocket;
 using DiscordIan.Key;
 using DiscordIan.Model;
 using Microsoft.Extensions.Caching.Distributed;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Helper
 {
@@ -14,8 +17,9 @@ namespace DiscordIan.Helper
     {
         public static string IsNullOrEmptyReplace(this string str, string replace)
         {
-            return (string.IsNullOrEmpty(str)) ? replace : str;            
+            return (string.IsNullOrEmpty(str)) ? replace : str;
         }
+
         public static string ToTitleCase(this string str)
         {
             return CultureInfo.CurrentCulture.TextInfo.ToTitleCase(str);
@@ -68,14 +72,14 @@ namespace DiscordIan.Helper
                 return str;
             }
 
-            var wordSwaps = JsonSerializer.Deserialize<WordSwaps>(cachedSwaps);
+            var wordSwaps = JsonConvert.DeserializeObject<WordSwaps>(cachedSwaps);
 
             if (wordSwaps != null)
             {
-                 foreach (var swap in wordSwaps.SwapList)
-                    {
-                        str = str.Replace(swap.inbound, swap.outbound);
-                    }
+                foreach (var swap in wordSwaps.SwapList)
+                {
+                    str = str.Replace(swap.inbound, swap.outbound);
+                }
             }
 
             return str;
@@ -154,6 +158,45 @@ namespace DiscordIan.Helper
 
             var rect = new Rectangle(leftMost, topMost, croppedWidth, croppedHeight);
             return image.CropImage(rect);
+        }
+
+        public static void Shuffle<T>(this IList<T> list)
+        {
+            var random = new Random();
+
+            for (int i = list.Count - 1; i > 1; i--)
+            {
+                var rnd = random.Next(i + 1);
+
+                (list[i], list[rnd]) = (list[rnd], list[i]);
+            }
+        }
+
+        public static bool IsNaughty(this SocketUser user)
+        {
+            if (!(user is SocketGuildUser usr))
+            {
+                return false;
+            }
+
+            if (usr.Roles.Any(role => role.Name.Equals("Naughty", StringComparison.OrdinalIgnoreCase)))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        public static async Task<T> Deserialize<T>(this IDistributedCache cache, string key)
+        {
+            var cacheString = await cache.GetStringAsync(key);
+
+            if (!string.IsNullOrEmpty(cacheString))
+            {
+                return JsonConvert.DeserializeObject<T>(cacheString);
+            }
+
+            return default;
         }
     }
 }

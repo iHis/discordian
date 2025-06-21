@@ -5,7 +5,7 @@
         public string IanCatFactEndpoint { get; set; }
         public string IanCommandChar { get; set; }
         public string IanLoginToken { get; set; }
-        public string IanMapQuestEndpoint{ get; set; }
+        public string IanMapQuestEndpoint { get; set; }
         public string IanMapQuestKey { get; set; }
         public string IanOpenWeatherKey { get; set; }
         public string IanOpenWeatherMapEndpointCoords { get; set; }
@@ -28,5 +28,11 @@
         public string IanGameKey { get; set; }
         public string IanBooksEndpoint { get; set; }
         public string IanBooksKey { get; set; }
+        public string InspiroBotEndpoint { get; set; }
+        public string WeatherApiEndpoint { get; set; }
+        public string WeatherApiKey { get; set; }
+        public string MeteoSourceEndpoint { get; set; }
+        public string MeteoSourceKey { get; set; }
+        public string PollinationsAIEndpoint { get; set; }
     }
 }
