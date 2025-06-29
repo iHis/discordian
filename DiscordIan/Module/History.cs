@@ -4,6 +4,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Discord.Commands;
 using DiscordIan.Helper;
+using DiscordIan.Key;
 using DiscordIan.Model;
 using Microsoft.Extensions.Caching.Distributed;
 
@@ -12,8 +13,6 @@ namespace DiscordIan.Module
     public class History : BaseModule
     {
         private readonly IDistributedCache _cache;
-
-        private const string CacheKey = "History";
 
         public History(IDistributedCache cache)
         {
@@ -26,7 +25,7 @@ namespace DiscordIan.Module
         public async Task HistoryAsync([Summary("User to filter by")]
             string user = null)
         {
-            var cache = await _cache.Deserialize<HistoryModel>(CacheKey);
+            var cache = await _cache.Deserialize<HistoryModel>(Cache.History);
 
             if (cache == default)
             {
