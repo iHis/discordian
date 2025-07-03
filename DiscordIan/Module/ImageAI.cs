@@ -129,7 +129,8 @@ namespace DiscordIan.Module
                 var message = messages
                     .FirstOrDefault()
                     .FirstOrDefault(m =>
-                    (m.Embeds.Any()
+                    m.Author.Id == _client.CurrentUser.Id
+                    && (m.Embeds.Any()
                         && (m.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
                     || m.Content.StartsWith("Prompt:"));
 
