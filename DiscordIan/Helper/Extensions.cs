@@ -5,6 +5,7 @@ using System.Globalization;
 using System.Linq;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord;
 using Discord.WebSocket;
 using DiscordIan.Key;
 using DiscordIan.Model;
@@ -197,6 +198,49 @@ namespace DiscordIan.Helper
             }
 
             return default;
+        }
+
+        public static async Task<IGuildUser> GetUserByName(this ISocketMessageChannel channel, string username)
+        {
+            var users = await channel.GetUsersAsync().ToListAsync();
+            var user = users
+                .SelectMany(x => x.Select(y => y as IGuildUser))
+                .FirstOrDefault(u => u.Username == username || u.Nickname == username);
+
+            return user;
+        }
+
+        public static async Task<IGuildUser> GetUserByID(this ISocketMessageChannel channel, ulong id)
+        {
+            var users = await channel.GetUsersAsync().ToListAsync();
+            var user = users
+                .SelectMany(x => x.Select(y => y as IGuildUser))
+                .FirstOrDefault(u => u.Id == id);
+
+            return user;
+        }
+
+        public static async Task<IGuildUser> GetUser(this ISocketMessageChannel channel, string input)
+        {
+            var mentionCheck = new Regex("^<@([0-9]+)>$").Match(input);
+            IGuildUser guildUser;
+
+            if (mentionCheck.Groups.Count > 1)
+            {
+                var id = ulong.Parse(mentionCheck.Groups[1]?.Value);
+                guildUser = await channel.GetUserByID(id);
+            }
+            else
+            {
+                guildUser = await channel.GetUserByName(input);
+            }
+
+            if (!string.IsNullOrEmpty(guildUser?.Nickname))
+            {
+                return guildUser;
+            }
+
+            return null;
         }
     }
 }

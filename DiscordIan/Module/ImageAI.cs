@@ -3,9 +3,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Text.RegularExpressions;
+using System.Threading.Channels;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.Net;
 using Discord.WebSocket;
 using DiscordIan.Helper;
 using DiscordIan.Key;
@@ -106,29 +108,33 @@ namespace DiscordIan.Module
         [Alias("nope")]
         public async Task DeleteLastImage()
         {
-            var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
             var messageRef = Context.Message.ReferencedMessage;
             var model = new ImgCacheModel();
 
-            if (cache == default && messageRef == null)
-            {
-                return;
-            }
-
-            if (cache != default && messageRef == null)
-            {
-                model = cache.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id);
-            }
-
             if (messageRef != null)
             {
-                if (messageRef.Author.Id == _client.CurrentUser.Id 
+                if (messageRef.Author.Id == _client.CurrentUser.Id
                     && ((messageRef.Embeds.Any()
                         && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
                     || messageRef.Content.StartsWith("Prompt:")))
                 {
                     model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id };
                 }
+            }
+            else
+            {
+                var messages = await Context.Channel
+                    .GetMessagesAsync()
+                    .ToListAsync();
+                var message = messages
+                    .FirstOrDefault()
+                    .FirstOrDefault(m =>
+                    (m.Embeds.Any()
+                        && (m.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
+                    || m.Content.StartsWith("Prompt:"));
+
+                model.ChannelId = message.Channel.Id;
+                model.MessageId = message.Id;
             }
 
             if (model != null && model.MessageId != 0)
@@ -164,16 +170,18 @@ namespace DiscordIan.Module
             {
                 if (messageRef.Author.Id == _client.CurrentUser.Id && messageRef.Content.StartsWith("Prompt:"))
                 {
-                    var prompt = $"{messageRef.Content}\nSender: {Context.User.Username}";
+                    var user = await Context.Channel.GetUserByID(Context.User.Id);
+
+                    var prompt = $"{messageRef.Content}\nSender: {user.Nickname}";
                     var embed = new EmbedBuilder
                     {
                         Title = prompt,
                         ImageUrl = messageRef.Attachments.First().Url
                     };
 
-                    var channel = _client.GetChannel(QuakeChannel) as ISocketMessageChannel;
+                    var quake = _client.GetChannel(QuakeChannel) as ISocketMessageChannel;
 
-                    await channel.SendMessageAsync("", false, embed.Build());
+                    await quake.SendMessageAsync("", false, embed.Build());
 
                     return;
                 }
@@ -209,7 +217,8 @@ namespace DiscordIan.Module
                 var channel = channelId != null
                     ? _client.GetChannel((ulong)channelId) as ISocketMessageChannel
                     : Context.Channel;
-
+                var user = await Context.Channel.GetUserByName(Context.User.Username);
+                
                 using var stream = new MemoryStream();
                 response.Data.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
                 stream.Seek(0, SeekOrigin.Begin);
@@ -217,7 +226,7 @@ namespace DiscordIan.Module
                 var message = await channel.SendFileAsync(
                     stream,
                     "image.jpeg",
-                    $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {Context.User.Username}" : "")}");
+                    $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname}" : "")}");
 
                 ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
             }

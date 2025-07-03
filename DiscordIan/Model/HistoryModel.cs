@@ -10,6 +10,7 @@ namespace DiscordIan.Model
 
     public class HistoryItem
     {
+        public string ChannelName { get; set; }
         public string UserName { get; set; }
         public string Service { get; set; }
         public string Input { get; set; }

@@ -52,11 +52,12 @@ namespace DiscordIan.Module
 
         public async void HistoryAdd(IDistributedCache _cache, string service, string input, TimeSpan time)
         {
-            var user = Context.User.Username;
+            var user = await Context.Channel.GetUserByID(Context.User.Id);
 
             var historyItem = new HistoryItem
             {
-                UserName = user,
+                ChannelName = Context.Channel.Name,
+                UserName = user.Nickname,
                 Service = service,
                 Input = input,
                 Timing = string.Format("{0}.{1}s", time.Seconds, time.Milliseconds),
@@ -78,7 +79,7 @@ namespace DiscordIan.Module
             {
                 cache.HistoryList.Add(historyItem);
 
-                var pastUserHist = cache.HistoryList.Where(h => h.UserName == user);
+                var pastUserHist = cache.HistoryList.Where(h => h.UserName == user.Nickname);
 
                 if (pastUserHist.Count() > 10)
                 {

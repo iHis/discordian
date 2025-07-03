@@ -1,7 +1,9 @@
 ﻿using System;
 using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
+using Discord;
 using Discord.Commands;
 using DiscordIan.Helper;
 using DiscordIan.Key;
@@ -22,8 +24,8 @@ namespace DiscordIan.Module
 
         [Command("history", RunMode = RunMode.Async)]
         [Summary("Returns previous 10 calls.")]
-        public async Task HistoryAsync([Summary("User to filter by")]
-            string user = null)
+        public async Task HistoryAsync([Remainder]
+        [Summary("User to filter by")] string user = null)
         {
             var cache = await _cache.Deserialize<HistoryModel>(Cache.History);
 
@@ -36,7 +38,12 @@ namespace DiscordIan.Module
             var response = string.Empty;
 
             var sb = new StringBuilder();
-            int items = 0;
+            var items = 0;
+
+            if (!string.IsNullOrEmpty(user))
+            {
+                user = (await Context.Channel.GetUser(user))?.Nickname ?? user;
+            }
 
             foreach (var item in cache.HistoryList.OrderByDescending(h => h.AddDate))
             {
@@ -47,14 +54,21 @@ namespace DiscordIan.Module
 
                 if (string.IsNullOrEmpty(user) || item.UserName == user)
                 {
-                    sb.AppendLine($"**User:** {item.UserName} **Date:** {DateHelper.UTCtoEST(item.AddDate, "MM/dd hh:mm tt")} **Service:** {item.Service} **Input:** {item.Input} **Timing:** {item.Timing}");
+                    sb.AppendLine($"**User:** {item.UserName} **Channel:** {item.ChannelName} **Date:** {DateHelper.UTCtoEST(item.AddDate, "MM/dd hh:mm tt")} **Service:** {item.Service} **Input:** {item.Input} **Timing:** {item.Timing}");
                     items++;
                 }
             }
 
             var reversed = string.Join("\r\n", sb.ToString().Trim().Split('\r', '\n').Reverse());
 
-            await ReplyAsync(">>> " + reversed);
+            if (!string.IsNullOrEmpty(reversed))
+            {
+                await ReplyAsync(">>> " + reversed);
+            }
+            else
+            {
+                await ReplyAsync("No API history records found.");
+            }
         }
     }
 }
