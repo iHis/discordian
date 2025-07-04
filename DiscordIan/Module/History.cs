@@ -42,7 +42,8 @@ namespace DiscordIan.Module
 
             if (!string.IsNullOrEmpty(user))
             {
-                user = (await Context.Channel.GetUser(user))?.Nickname ?? user;
+                var guildUser = await Context.Channel.GetUser(user);
+                user = guildUser?.Nickname ?? guildUser?.Username ?? user;
             }
 
             foreach (var item in cache.HistoryList.OrderByDescending(h => h.AddDate))
