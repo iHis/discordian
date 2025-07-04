@@ -57,7 +57,7 @@ namespace DiscordIan.Module
             var historyItem = new HistoryItem
             {
                 ChannelName = Context.Channel.Name,
-                UserName = user.Nickname,
+                UserName = user.Nickname ?? user.Username,
                 Service = service,
                 Input = input,
                 Timing = string.Format("{0}.{1}s", time.Seconds, time.Milliseconds),
@@ -79,7 +79,7 @@ namespace DiscordIan.Module
             {
                 cache.HistoryList.Add(historyItem);
 
-                var pastUserHist = cache.HistoryList.Where(h => h.UserName == user.Nickname);
+                var pastUserHist = cache.HistoryList.Where(h => h.UserName == user.Nickname || h.UserName == user.Nickname);
 
                 if (pastUserHist.Count() > 10)
                 {
