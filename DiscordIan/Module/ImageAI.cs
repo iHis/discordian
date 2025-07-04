@@ -173,7 +173,7 @@ namespace DiscordIan.Module
                 {
                     var user = await Context.Channel.GetUserByID(Context.User.Id);
 
-                    var prompt = $"{messageRef.Content}\nSender: {user.Nickname}";
+                    var prompt = $"{messageRef.Content}\nSender: {user.Nickname ?? user.Username}";
                     var embed = new EmbedBuilder
                     {
                         Title = prompt,
@@ -227,7 +227,7 @@ namespace DiscordIan.Module
                 var message = await channel.SendFileAsync(
                     stream,
                     "image.jpeg",
-                    $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname}" : "")}");
+                    $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}");
 
                 ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
             }
