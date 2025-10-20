@@ -52,19 +52,19 @@ namespace DiscordIan.Service
             }
         }
 
-        public async Task MessageReceivedAsync(SocketMessage rawMessage)
+        public async Task MessageReceivedAsync(SocketMessage message)
         {
             // Ignore system messages, or messages from other bots
-            if (!(rawMessage is SocketUserMessage message))
-            {
+            //if (!(rawMessage is SocketUserMessage message))
+            //{
             //    return;
-            }
+            //}
 
             // Ignore messages not from a user
-            if (message.Source != MessageSource.User)
-            {
+            //if (message.Source != MessageSource.User)
+            //{
             //    return;
-            }
+            //}
 
             // This value holds the offset where the prefix ends
             var argPos = 0;
@@ -78,7 +78,7 @@ namespace DiscordIan.Service
                 return;
             }
 
-            var context = new SocketCommandContext(_discord, message);
+            var context = new SocketCommaContext(_discord, message);
 
             _logger.LogTrace("Received command from {Username} in message {Message}",
                 context.User.Username,
