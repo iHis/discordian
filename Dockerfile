@@ -1,5 +1,5 @@
 # Get build image
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-stage
 WORKDIR /app
 
 # Copy source
@@ -9,16 +9,14 @@ COPY . ./
 RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 
 # Get runtime image
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1 AS publish-stage
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS publish-stage
 WORKDIR /app
 
-RUN echo \
-    "deb [arch=armhf] https://download.docker.com/linux/debian trixie stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+#RUN echo \
+#    "deb [arch=armhf] https://download.docker.com/linux/debian trixie stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-RUN echo "$(cat /etc/apt/sources.list.d/docker.list)"
-
-RUN apt-get update --allow-releaseinfo-change \
-&& apt-get install -y --allow-unauthenticated --allow-releaseinfo-change \
+RUN apt-get update \
+&& apt-get install -y --allow-unauthenticated \
     libc6-dev \
     libgdiplus \
     libx11-dev \
