@@ -26,12 +26,12 @@ WORKDIR /app
 #    "deb [arch=armhf signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm InRelease" | tee /etc/apt/sources.list.d/docker.list > /dev/null
     
 
-RUN apt-get update \
-&&  apt-get install -y --allow-unauthenticated \
-    libc6-dev \
-    libgdiplus \
-    libx11-dev \
- && rm -rf /var/lib/apt/lists/*
+#RUN apt-get update \
+#&&  apt-get install -y --allow-unauthenticated \
+#    libc6-dev \
+#    libgdiplus \
+#    libx11-dev \
+# && rm -rf /var/lib/apt/lists/*
 
 # Bring in metadata via --build-arg
 ARG BRANCH=unknown
