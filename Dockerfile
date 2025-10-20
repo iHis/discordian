@@ -1,5 +1,5 @@
 # Get build image
-FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build-stage
+FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-stage
 WORKDIR /app
 
 # Copy source
@@ -9,7 +9,7 @@ COPY . ./
 RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 
 # Get runtime image
-FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS publish-stage
+FROM mcr.microsoft.com/dotnet/aspnet:10.0 AS publish-stage
 WORKDIR /app
 
 #RUN echo \
@@ -60,4 +60,4 @@ ENV org.opencontainers.image.created=$IMAGE_CREATED \
 COPY --from=build-stage "/app/publish/" .
 
 # Set entrypoint
-#ENTRYPOINT ["dotnet", "DiscordIan.dll"]
+ENTRYPOINT ["dotnet", "DiscordIan.dll"]
