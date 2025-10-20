@@ -1,5 +1,5 @@
 # Get build image
-FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0-bookworm-slim AS build-stage
 WORKDIR /app
 
 # Copy source
@@ -9,18 +9,18 @@ COPY . ./
 RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 
 # Get runtime image
-FROM mcr.microsoft.com/dotnet/runtime:9.0 AS publish-stage
+FROM mcr.microsoft.com/dotnet/aspnet:9.0-bookworm-slim AS publish-stage
 WORKDIR /app
 
 #RUN echo \
 #    "deb [arch=armhf] https://download.docker.com/linux/debian trixie stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-#RUN apt-get update \
-#&&  apt-get install -y --allow-unauthenticated \
-#    libc6-dev \
-#    libgdiplus \
-#    libx11-dev \
-# && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+&&  apt-get install -y --allow-unauthenticated \
+    libc6-dev \
+    libgdiplus \
+    libx11-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Bring in metadata via --build-arg
 ARG BRANCH=unknown
