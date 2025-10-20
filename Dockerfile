@@ -16,12 +16,12 @@ RUN rm /etc/apt/sources.list.d/debian.sources
 RUN echo \
     "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" > /etc/apt/sources.list.d/docker.list
 
-#RUN apt-get update \
-#&&  apt-get install -y --allow-unauthenticated \
- #   libc6-dev \
- #   libgdiplus \
- #   libx11-dev \
- #&& rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+&&  apt-get install -y --allow-unauthenticated \
+    libc6-dev \
+    libgdiplus \
+    libx11-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Bring in metadata via --build-arg
 ARG BRANCH=unknown
