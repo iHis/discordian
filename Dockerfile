@@ -1,5 +1,5 @@
 # Get build image
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-stage
 WORKDIR /app
 
 # Copy source
@@ -9,7 +9,7 @@ COPY . ./
 RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 
 # Get runtime image
-FROM mcr.microsoft.com/dotnet/runtime:10.0 AS publish-stage
+FROM mcr.microsoft.com/dotnet/runtime:9.0 AS publish-stage
 WORKDIR /app
 
 #RUN echo \
