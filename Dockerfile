@@ -1,5 +1,5 @@
 # Get build image
-FROM mcr.microsoft.com/dotnet/sdk:10.0 AS build-stage
+FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-stage
 WORKDIR /app
 
 # Copy source
