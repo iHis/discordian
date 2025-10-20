@@ -12,8 +12,9 @@ RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS publish-stage
 WORKDIR /app
 
+RUN rm /etc/apt/sources.list.d/debian.source
 RUN echo \
-    "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" >> /etc/apt/sources.list.d/docker.list
+    "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" > /etc/apt/sources.list.d/docker.list
 
 #RUN apt-get update \
 #&&  apt-get install -y --allow-unauthenticated \
