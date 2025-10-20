@@ -71,14 +71,16 @@ namespace DiscordIan.Service
             // Perform prefix check. You may want to replace this with
             // (!message.HasCharPrefix('!', ref argPos))
             // for a more traditional command format like !help.
-            if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)
-                && _options.IanCommandChar?.Length == 1
-                && !message.HasCharPrefix(_options.IanCommandChar[0], ref argPos))
+            //if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)
+            //    && _options.IanCommandChar?.Length == 1
+            //    && !message.HasCharPrefix(_options.IanCommandChar[0], ref argPos))
+            if (string.IsNullOrEmpty(message.Content)
+               || !message.Content.StartsWith(_options.IanCommandChar))
             {
                 return;
             }
 
-            var context = new SocketCommaContext(_discord, message);
+            var context = new SocketCommandContext(_discord, message);
 
             _logger.LogTrace("Received command from {Username} in message {Message}",
                 context.User.Username,
