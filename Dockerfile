@@ -12,7 +12,7 @@ RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS publish-stage
 WORKDIR /app
 
-RUN rm /etc/apt/sources.list.d/debian.source
+RUN rm /etc/apt/sources.list.d/debian.sources
 RUN echo \
     "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" > /etc/apt/sources.list.d/docker.list
 
