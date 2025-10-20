@@ -13,7 +13,7 @@ FROM mcr.microsoft.com/dotnet/core/runtime:3.1 AS publish-stage
 WORKDIR /app
 
 RUN echo \
-    "deb [arch=armhf trusted=yes] http://raspbian.raspberrypi.org/raspbian/ buster stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+    "deb [arch=armhf trusted=yes] http://raspbian.raspberrypi.org/raspbian/ buster main" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 #RUN apt-get update
 #RUN apt-get install ca-certificates curl
