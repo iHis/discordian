@@ -12,6 +12,11 @@ RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 FROM mcr.microsoft.com/dotnet/core/runtime:3.1 AS publish-stage
 WORKDIR /app
 
+RUN echo \
+    "deb [arch=armhf] https://download.docker.com/linux/debian trixie stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+
+RUN echo "$(cat /etc/apt/sources.list.d/docker.list)"
+
 RUN apt-get update --allow-releaseinfo-change \
 && apt-get install -y --allow-unauthenticated --allow-releaseinfo-change \
     libc6-dev \
