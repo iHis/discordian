@@ -24,7 +24,7 @@ WORKDIR /app
 #    "deb [arch=armhf signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 RUN echo \
-    "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" | tee /etc/apt/sources.list.d/debian.sources > /dev/null
+    "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" >> /etc/apt/sources.list.d/debian.sources
 
 RUN apt-get update \
 &&  apt-get install -y --allow-unauthenticated \
