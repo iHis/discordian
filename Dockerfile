@@ -15,8 +15,7 @@ WORKDIR /app
 #RUN echo \
 #    "deb [arch=armhf] https://download.docker.com/linux/debian trixie stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
-RUN apt-get update \
-&& apt-get install -y --allow-unauthenticated \
+RUN apt-get install -y --allow-unauthenticated \
     libc6-dev \
     libgdiplus \
     libx11-dev \
