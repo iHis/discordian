@@ -12,26 +12,15 @@ RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS publish-stage
 WORKDIR /app
 
-#RUN echo \
-#    "deb [arch=armhf trusted=yes] http://raspbian.raspberrypi.org/raspbian/ buster main" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
-#RUN apt-get update
-#RUN apt-get install ca-certificates curl
-#RUN mkdir -p /etc/apt/keyrings
-#RUN curl -fsSL https://download.docker.com/linux/debian/gpg | gpg --dearmor -o /etc/apt/keyrings/docker.gpg
-#RUN sudo chmod a+r /etc/apt/keyrings/docker.gpg
-#RUN echo \
-#    "deb [arch=armhf signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/debian bookworm stable" | tee /etc/apt/sources.list.d/docker.list > /dev/null
-
 RUN echo \
-    "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" >> /etc/apt/sources.list.d/debian.sources
+    "deb [arch=armhf trusted=yes signed-by=/usr/share/keyrings/debian-archive-bookworm-automatic.gpg] http://raspbian.raspberrypi.org/raspbian/ bookworm main" >> /etc/apt/sources.list.d/docker.list
 
-#RUN apt-get update \
-#&&  apt-get install -y --allow-unauthenticated \
-#    libc6-dev \
-#    libgdiplus \
-#    libx11-dev \
-# && rm -rf /var/lib/apt/lists/*
+RUN apt-get update \
+&&  apt-get install -y --allow-unauthenticated \
+    libc6-dev \
+    libgdiplus \
+    libx11-dev \
+ && rm -rf /var/lib/apt/lists/*
 
 # Bring in metadata via --build-arg
 ARG BRANCH=unknown
