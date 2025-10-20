@@ -52,8 +52,9 @@ namespace DiscordIan.Service
             }
         }
 
-        public async Task MessageReceivedAsync(SocketMessage message)
+        public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
+            var message = rawMessage as SocketUserMessage;
             // Ignore system messages, or messages from other bots
             //if (!(rawMessage is SocketUserMessage message))
             //{
@@ -71,11 +72,11 @@ namespace DiscordIan.Service
             // Perform prefix check. You may want to replace this with
             // (!message.HasCharPrefix('!', ref argPos))
             // for a more traditional command format like !help.
-            //if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)
-            //    && _options.IanCommandChar?.Length == 1
-            //    && !message.HasCharPrefix(_options.IanCommandChar[0], ref argPos))
-            if (string.IsNullOrEmpty(message.Content)
-               || !message.Content.StartsWith(_options.IanCommandChar))
+            if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)
+                && _options.IanCommandChar?.Length == 1
+                && !message.HasCharPrefix(_options.IanCommandChar[0], ref argPos))
+            //if (string.IsNullOrEmpty(message.Content)
+            //   || !message.Content.StartsWith(_options.IanCommandChar))
             {
                 return;
             }
