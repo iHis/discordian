@@ -1,5 +1,5 @@
 # Get build image
-FROM mcr.microsoft.com/dotnet/core/sdk:3.1 AS build-stage
+FROM mcr.microsoft.com/dotnet/sdk:9.0 AS build-stage
 WORKDIR /app
 
 # Copy source
@@ -9,11 +9,11 @@ COPY . ./
 RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 
 # Get runtime image
-FROM mcr.microsoft.com/dotnet/core/runtime:3.1 AS publish-stage
+FROM mcr.microsoft.com/dotnet/aspnet:9.0 AS publish-stage
 WORKDIR /app
 
-RUN echo \
-    "deb [arch=armhf trusted=yes] http://raspbian.raspberrypi.org/raspbian/ buster main" | tee /etc/apt/sources.list.d/docker.list > /dev/null
+#RUN echo \
+#    "deb [arch=armhf trusted=yes] http://raspbian.raspberrypi.org/raspbian/ buster main" | tee /etc/apt/sources.list.d/docker.list > /dev/null
 
 #RUN apt-get update
 #RUN apt-get install ca-certificates curl
