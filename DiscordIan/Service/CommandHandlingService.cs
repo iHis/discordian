@@ -55,16 +55,16 @@ namespace DiscordIan.Service
         public async Task MessageReceivedAsync(SocketMessage rawMessage)
         {
             // Ignore system messages, or messages from other bots
-            if (!(rawMessage is SocketUserMessage message))
-            {
-                return;
-            }
+            //if (!(rawMessage is SocketUserMessage message))
+            //{
+            //    return;
+            //}
 
             // Ignore messages not from a user
-            if (message.Source != MessageSource.User)
-            {
-                return;
-            }
+            //if (message.Source != MessageSource.User)
+            //{
+            //    return;
+            //}
 
             // This value holds the offset where the prefix ends
             var argPos = 0;
