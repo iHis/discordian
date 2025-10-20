@@ -12,8 +12,8 @@ RUN dotnet publish -c Release -o "/app/publish/" --disable-parallel
 FROM mcr.microsoft.com/dotnet/core/runtime:3.1 AS publish-stage
 WORKDIR /app
 
-RUN apt-get update \
-&& apt-get install -y --allow-unauthenticated \
+RUN apt-get update --allow-releaseinfo-change \
+&& apt-get install -y --allow-unauthenticated --allow-releaseinfo-change \
     libc6-dev \
     libgdiplus \
     libx11-dev \
