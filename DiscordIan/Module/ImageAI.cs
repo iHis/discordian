@@ -132,10 +132,10 @@ namespace DiscordIan.Module
                     m.Author.Id == _client.CurrentUser.Id
                     && (m.Embeds.Any()
                         && (m.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
-                    || m.Content.StartsWith("Prompt:"));
+                    || m.Reference != null);
 
-                model.ChannelId = message.Channel.Id;
-                model.MessageId = message.Id;
+                model.ChannelId = message?.Channel?.Id ?? 0;
+                model.MessageId = message?.Id ?? 0;
             }
 
             if (model != null && model.MessageId != 0)
