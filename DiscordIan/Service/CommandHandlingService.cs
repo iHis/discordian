@@ -5,9 +5,12 @@ using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
 using Discord.WebSocket;
+using DiscordIan.Key;
+using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
+using Newtonsoft.Json;
 
 namespace DiscordIan.Service
 {
@@ -21,14 +24,16 @@ namespace DiscordIan.Service
         private readonly DiscordSocketClient _discord;
         private readonly ILogger<CommandHandlingService> _logger;
         private readonly Model.Options _options;
+        private readonly IDistributedCache _cache;
 
-        public CommandHandlingService(IServiceProvider services)
+        public CommandHandlingService(IServiceProvider services, IDistributedCache cache)
         {
             _services = services ?? throw new ArgumentNullException(nameof(services));
             _commands = services.GetRequiredService<CommandService>();
             _discord = services.GetRequiredService<DiscordSocketClient>();
             _logger = services.GetRequiredService<ILogger<CommandHandlingService>>();
             _options = services.GetRequiredService<IOptionsMonitor<Model.Options>>().CurrentValue;
+            _cache = cache;
 
             // Hook CommandExecuted to handle post-command-execution logic.
             _commands.CommandExecuted += CommandExecutedAsync;
@@ -82,6 +87,11 @@ namespace DiscordIan.Service
             }
 
             var context = new SocketCommandContext(_discord, message);
+
+            if (!context.Message.Content.StartsWith("!again")) 
+            {
+                await _cache.SetAsync(string.Format(Cache.PreviousCommand, context.Message.Channel.Id), BitConverter.GetBytes(context.Message.Id), new DistributedCacheEntryOptions());
+            }
 
             _logger.LogTrace("Received command from {Username} in message {Message}",
                 context.User.Username,

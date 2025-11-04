@@ -57,7 +57,7 @@ namespace DiscordIan.Module
 
             try
             {
-                await CallImageService(model);
+                await CallImageService(model, Context.Message);
             }
             catch (Exception ex)
             {
@@ -93,7 +93,7 @@ namespace DiscordIan.Module
                             ? model
                             : msg.Request.Model;
 
-                        await CallImageService(msg.Request);
+                        await CallImageService(msg.Request, Context.Message);
                     }
                     catch (Exception ex)
                     {
@@ -197,13 +197,13 @@ namespace DiscordIan.Module
 
                     if (model != null && !string.IsNullOrEmpty(model.Prompt))
                     {
-                        await CallImageService(model, QuakeChannel);
+                        await CallImageService(model, Context.Message, QuakeChannel);
                     }
                 }
             }
         }
 
-        private async Task CallImageService(ImgRequestModel request, ulong? channelId = null)
+        private async Task CallImageService(ImgRequestModel request, SocketUserMessage origMsg, ulong? channelId = null)
         {
             var url = string.Format(_options.PollinationsAIEndpoint,
                 Uri.EscapeDataString(request.Prompt),
@@ -224,11 +224,15 @@ namespace DiscordIan.Module
                 response.Data.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
                 stream.Seek(0, SeekOrigin.Begin);
                 response.Data.Dispose();
-                var message = await channel.SendFileAsync(
-                    stream,
-                    "image.jpeg",
-                    $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}");
 
+                var messageReference = new MessageReference(Context.Message.Id);
+                var message = messageReference.ChannelId != 0
+                    ? await channel.SendFileAsync(
+                        stream,
+                        "image.jpeg",
+                        $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}")
+                    : await channel.SendFileAsync(stream,"image.jpeg", messageReference: messageReference);
+                
                 ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
             }
             else

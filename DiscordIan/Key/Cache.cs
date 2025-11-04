@@ -12,5 +12,6 @@
         public static readonly string History = "history";
         public static readonly string ImgAi = "imgai.{0}";
         public static readonly string Weather = "weather.{0}";
+        public static readonly string PreviousCommand = "prevCmd.{0}";
     }
 }

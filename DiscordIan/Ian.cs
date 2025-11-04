@@ -33,9 +33,9 @@ namespace DiscordIan
                 Log.Logger.Information("Starting up");
 
                 using var client = services.GetRequiredService<DiscordSocketClient>();
-
+                
                 client.Log += LogAsync;
-
+                
                 services.GetRequiredService<CommandService>().Log += LogAsync;
 
                 var optionsAccessor = services.GetRequiredService<IOptionsMonitor<Model.Options>>();
@@ -105,7 +105,8 @@ namespace DiscordIan
             services.AddDistributedMemoryCache();
 
             // discord services
-            services.AddSingleton<DiscordSocketClient>();
+            var config = new DiscordSocketConfig { MessageCacheSize = 100 };
+            services.AddSingleton(x => new DiscordSocketClient(config));
             services.AddSingleton<CommandService>();
 
             // project services

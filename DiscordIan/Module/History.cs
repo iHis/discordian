@@ -1,13 +1,16 @@
 ﻿using System;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
+using Discord.WebSocket;
 using DiscordIan.Helper;
 using DiscordIan.Key;
 using DiscordIan.Model;
+using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
 
 namespace DiscordIan.Module
@@ -15,11 +18,13 @@ namespace DiscordIan.Module
     public class History : BaseModule
     {
         private readonly IDistributedCache _cache;
+        private readonly CommandHandlingService _cmdService;
 
-        public History(IDistributedCache cache)
+        public History(IDistributedCache cache, CommandHandlingService cmdService)
         {
             _cache = cache
                 ?? throw new ArgumentNullException(nameof(cache));
+            _cmdService = cmdService;
         }
 
         [Command("history", RunMode = RunMode.Async)]
@@ -70,6 +75,23 @@ namespace DiscordIan.Module
             {
                 await ReplyAsync("No API history records found.");
             }
+        }
+
+        [Command("again", RunMode = RunMode.Async)]
+        [Summary("Repeat last command")]
+        public async Task RunAgain()
+        {
+            var msgBytes = await _cache.GetAsync(string.Format(Cache.PreviousCommand, Context.Channel.Id));
+
+            if (msgBytes.Length != 0)
+            {
+                if (BitConverter.ToUInt64(msgBytes, 0) is ulong msgId && msgId != 0)
+                {
+                    var msg = Context.Channel.GetCachedMessage(msgId);
+
+                    await _cmdService.MessageReceivedAsync(msg);
+                }
+            }            
         }
     }
 }
