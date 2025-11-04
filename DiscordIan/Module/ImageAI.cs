@@ -116,7 +116,7 @@ namespace DiscordIan.Module
                 if (messageRef.Author.Id == _client.CurrentUser.Id
                     && ((messageRef.Embeds.Any()
                         && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
-                    || messageRef.Content.StartsWith("Prompt:")))
+                    || messageRef.Reference != null))
                 {
                     model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id };
                 }
@@ -169,7 +169,7 @@ namespace DiscordIan.Module
 
             if (messageRef != null)
             {
-                if (messageRef.Author.Id == _client.CurrentUser.Id && messageRef.Content.StartsWith("Prompt:"))
+                if (messageRef.Author.Id == _client.CurrentUser.Id && messageRef.ReferencedMessage != null)
                 {
                     var user = await Context.Channel.GetUserByID(Context.User.Id);
 
