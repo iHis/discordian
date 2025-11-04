@@ -77,10 +77,10 @@ namespace DiscordIan.Service
             }
         }
 
-        public async Task<Response<Bitmap>> GetImageAsync(Uri requestUri)
+        public async Task<Response<byte[]>> GetImageAsync(Uri requestUri)
         {
             var stopwatch = Stopwatch.StartNew();
-            var response = new Response<Bitmap>();
+            var response = new Response<byte[]>();
             try
             {
                 var imageResult = await ImageHelper.GetImageFromURI(requestUri);

@@ -1,44 +1,37 @@
 ﻿using System;
-using System.Drawing;
 using System.IO;
 using System.Net;
 using System.Threading.Tasks;
+using Microsoft.Maui.Graphics;
 
 namespace DiscordIan.Helper
 {
     public static class ImageHelper
     {
-        public async static Task<Bitmap> GetImageFromURI(Uri uri)
+        public async static Task<byte[]> GetImageFromURI(Uri uri)
         {
-            Bitmap response;
-
-            var data = await GetImageData(uri);
-
-            var streamBitmap = new MemoryStream(data);
-            response = new Bitmap(Image.FromStream(streamBitmap));
-
-            return response;
+            return await GetImageData(uri);
         }
 
-        public static Bitmap ClipComicSection(Bitmap image, Tuple<int, int> layout, int selection)
-        {
-            if (selection > (layout.Item1 * layout.Item2))
-            {
-                throw new Exception("Selection out of bounds, idiot.");
-            }
+        //public static Bitmap ClipComicSection(Bitmap image, Tuple<int, int> layout, int selection)
+        //{
+        //    if (selection > (layout.Item1 * layout.Item2))
+        //    {
+        //        throw new Exception("Selection out of bounds, idiot.");
+        //    }
 
-            var cellSize = new Size()
-            {
-                Width = image.Width / layout.Item1,
-                Height = image.Height / layout.Item2
-            };
+        //    var cellSize = new Size()
+        //    {
+        //        Width = image.Width / layout.Item1,
+        //        Height = image.Height / layout.Item2
+        //    };
 
-            var startPos = DetermineStartPoint(layout.Item1, selection, cellSize);
+        //    var startPos = DetermineStartPoint(layout.Item1, selection, cellSize);
 
-            var rect = new Rectangle(startPos, cellSize);
+        //    var rect = new Rectangle(startPos, cellSize);
 
-            return image.CropImage(rect).TrimWhiteSpace();
-        }
+        //    return image.CropImage(rect).TrimWhiteSpace();
+        //}
 
         private async static Task<byte[]> GetImageData(Uri uri)
         {

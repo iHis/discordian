@@ -151,53 +151,53 @@ namespace DiscordIan.Module
             }
         }
 
-        [Command("jerkzewt", RunMode = RunMode.Async)]
-        [Summary("Returns single pane from Jerk City comic.")]
-        [Alias("jz")]
-        public async Task JerkCitySingleCell([Remainder]
-            [Summary("Input is comic episode number, comic pane layout (ex: 3x3), and cell selection (ex: 2,1)")] string input = null)
-        {
-            if (string.IsNullOrEmpty(input))
-            {
-                await ReplyAsync("You must give an input, you jerk!");
-                return;
-            }
+        //[Command("jerkzewt", RunMode = RunMode.Async)]
+        //[Summary("Returns single pane from Jerk City comic.")]
+        //[Alias("jz")]
+        //public async Task JerkCitySingleCell([Remainder]
+        //    [Summary("Input is comic episode number, comic pane layout (ex: 3x3), and cell selection (ex: 2,1)")] string input = null)
+        //{
+        //    if (string.IsNullOrEmpty(input))
+        //    {
+        //        await ReplyAsync("You must give an input, you jerk!");
+        //        return;
+        //    }
 
-            var args = input.Split(" ");
+        //    var args = input.Split(" ");
 
-            if (args.Length == 3
-                && int.TryParse(args[0], out int episode)
-                && Regex.IsMatch(args[1], @"^[0-9]x[0-9]$")
-                && Regex.IsMatch(args[2], @"^[0-9]$"))
-            {
-                var layoutInput = args[1].Split("x");
-                var selectionInput = args[2];
+        //    if (args.Length == 3
+        //        && int.TryParse(args[0], out int episode)
+        //        && Regex.IsMatch(args[1], @"^[0-9]x[0-9]$")
+        //        && Regex.IsMatch(args[2], @"^[0-9]$"))
+        //    {
+        //        var layoutInput = args[1].Split("x");
+        //        var selectionInput = args[2];
 
-                var jerkUri = new Uri(_options.IanJerkCityEndpoint);
-                var url = $"{jerkUri.Scheme + Uri.SchemeDelimiter + jerkUri.Host}/{episode}.gif";
+        //        var jerkUri = new Uri(_options.IanJerkCityEndpoint);
+        //        var url = $"{jerkUri.Scheme + Uri.SchemeDelimiter + jerkUri.Host}/{episode}.gif";
 
-                var imageResponse = await _fetchService.GetImageAsync(new Uri(url));
-                apiTiming += imageResponse.Elapsed;
+        //        var imageResponse = await _fetchService.GetImageAsync(new Uri(url));
+        //        apiTiming += imageResponse.Elapsed;
 
-                var layout = new Tuple<int, int>(Convert.ToInt32(layoutInput[0]), Convert.ToInt32(layoutInput[1]));
-                var singleCell = ImageHelper.ClipComicSection(imageResponse.Data, layout, Convert.ToInt32(selectionInput));
+        //        var layout = new Tuple<int, int>(Convert.ToInt32(layoutInput[0]), Convert.ToInt32(layoutInput[1]));
+        //        var singleCell = ImageHelper.ClipComicSection(imageResponse.Data, layout, Convert.ToInt32(selectionInput));
 
-                using (var stream = new MemoryStream())
-                {
-                    singleCell.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
-                    stream.Seek(0, SeekOrigin.Begin);
-                    singleCell.Dispose();
-                    await Context.Channel.SendFileAsync(stream, "image.jpeg", string.Empty);
-                }
-            }
-            else
-            {
-                await ReplyAsync("Format your input correctly, jerk!");
-                return;
-            }
+        //        using (var stream = new MemoryStream())
+        //        {
+        //            singleCell.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
+        //            stream.Seek(0, SeekOrigin.Begin);
+        //            singleCell.Dispose();
+        //            await Context.Channel.SendFileAsync(stream, "image.jpeg", string.Empty);
+        //        }
+        //    }
+        //    else
+        //    {
+        //        await ReplyAsync("Format your input correctly, jerk!");
+        //        return;
+        //    }
 
-            HistoryAdd(_cache, GetType().Name, input, apiTiming);
-        }
+        //    HistoryAdd(_cache, GetType().Name, input, apiTiming);
+        //}
 
         private async Task JerkCityRandom()
         {

@@ -86,80 +86,80 @@ namespace DiscordIan.Helper
             return str;
         }
 
-        public static Bitmap CropImage(this Bitmap image, Rectangle cropArea)
-        {
-            var newImage = new Bitmap(image);
-            return newImage.Clone(cropArea, newImage.PixelFormat);
-        }
+        //public static Bitmap CropImage(this Bitmap image, Rectangle cropArea)
+        //{
+        //    var newImage = new Bitmap(image);
+        //    return newImage.Clone(cropArea, newImage.PixelFormat);
+        //}
 
-        public static Bitmap TrimWhiteSpace(this Bitmap image)
-        {
-            int w = image.Width;
-            int h = image.Height;
+        //public static Bitmap TrimWhiteSpace(this Bitmap image)
+        //{
+        //    int w = image.Width;
+        //    int h = image.Height;
 
-            bool IsAllWhiteRow(int row)
-            {
-                for (int i = 0; i < w; i++)
-                {
-                    if (image.GetPixel(i, row).R < 250)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
+        //    bool IsAllWhiteRow(int row)
+        //    {
+        //        for (int i = 0; i < w; i++)
+        //        {
+        //            if (image.GetPixel(i, row).R < 250)
+        //            {
+        //                return false;
+        //            }
+        //        }
+        //        return true;
+        //    }
 
-            bool IsAllWhiteColumn(int col)
-            {
-                for (int i = 0; i < h; i++)
-                {
-                    if (image.GetPixel(col, i).R < 250)
-                    {
-                        return false;
-                    }
-                }
-                return true;
-            }
+        //    bool IsAllWhiteColumn(int col)
+        //    {
+        //        for (int i = 0; i < h; i++)
+        //        {
+        //            if (image.GetPixel(col, i).R < 250)
+        //            {
+        //                return false;
+        //            }
+        //        }
+        //        return true;
+        //    }
 
-            int leftMost = 0;
-            for (int col = 0; col < w; col++)
-            {
-                if (IsAllWhiteColumn(col)) leftMost = col + 1;
-                else break;
-            }
+        //    int leftMost = 0;
+        //    for (int col = 0; col < w; col++)
+        //    {
+        //        if (IsAllWhiteColumn(col)) leftMost = col + 1;
+        //        else break;
+        //    }
 
-            int rightMost = w - 1;
-            for (int col = rightMost; col > 0; col--)
-            {
-                if (IsAllWhiteColumn(col)) rightMost = col - 1;
-                else break;
-            }
+        //    int rightMost = w - 1;
+        //    for (int col = rightMost; col > 0; col--)
+        //    {
+        //        if (IsAllWhiteColumn(col)) rightMost = col - 1;
+        //        else break;
+        //    }
 
-            int topMost = 0;
-            for (int row = 0; row < h; row++)
-            {
-                if (IsAllWhiteRow(row)) topMost = row + 1;
-                else break;
-            }
+        //    int topMost = 0;
+        //    for (int row = 0; row < h; row++)
+        //    {
+        //        if (IsAllWhiteRow(row)) topMost = row + 1;
+        //        else break;
+        //    }
 
-            int bottomMost = h - 1;
-            for (int row = bottomMost; row > 0; row--)
-            {
-                if (IsAllWhiteRow(row)) bottomMost = row - 1;
-                else break;
-            }
+        //    int bottomMost = h - 1;
+        //    for (int row = bottomMost; row > 0; row--)
+        //    {
+        //        if (IsAllWhiteRow(row)) bottomMost = row - 1;
+        //        else break;
+        //    }
 
-            if (rightMost == 0 && bottomMost == 0 && leftMost == w && topMost == h)
-            {
-                return image;
-            }
+        //    if (rightMost == 0 && bottomMost == 0 && leftMost == w && topMost == h)
+        //    {
+        //        return image;
+        //    }
 
-            int croppedWidth = rightMost - leftMost + 1;
-            int croppedHeight = bottomMost - topMost + 1;
+        //    int croppedWidth = rightMost - leftMost + 1;
+        //    int croppedHeight = bottomMost - topMost + 1;
 
-            var rect = new Rectangle(leftMost, topMost, croppedWidth, croppedHeight);
-            return image.CropImage(rect);
-        }
+        //    var rect = new Rectangle(leftMost, topMost, croppedWidth, croppedHeight);
+        //    return image.CropImage(rect);
+        //}
 
         public static void Shuffle<T>(this IList<T> list)
         {

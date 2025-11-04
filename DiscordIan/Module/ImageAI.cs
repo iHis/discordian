@@ -220,10 +220,7 @@ namespace DiscordIan.Module
                     : Context.Channel;
                 var user = await Context.Channel.GetUserByName(Context.User.Username);
                 
-                using var stream = new MemoryStream();
-                response.Data.Save(stream, System.Drawing.Imaging.ImageFormat.Jpeg);
-                stream.Seek(0, SeekOrigin.Begin);
-                response.Data.Dispose();
+                using var stream = new MemoryStream(response.Data);
 
                 var messageReference = new MessageReference(Context.Message.Id);
                 var message = messageReference.ChannelId != 0
@@ -231,7 +228,7 @@ namespace DiscordIan.Module
                         stream,
                         "image.jpeg",
                         $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}")
-                    : await channel.SendFileAsync(stream,"image.jpeg", messageReference: messageReference);
+                    : await channel.SendFileAsync(stream, "image.jpeg", messageReference: messageReference);
                 
                 ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
             }
