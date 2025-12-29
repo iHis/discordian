@@ -198,7 +198,6 @@ namespace DiscordIan.Module
             {
                 Author = EmbedHelper.MakeAuthor(response.VolumeInfo.Title.WordSwap(_cache), titleUrl),
                 Description = description
-                     .Substring(0, 2048)
                      .WordSwap(_cache),
                 ThumbnailUrl = thumb,
                 Fields = new List<EmbedFieldBuilder>()

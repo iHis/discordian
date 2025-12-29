@@ -1,8 +1,10 @@
 ﻿using System;
 using System.IO;
 using System.Net;
+using System.Net.Http;
 using System.Threading.Tasks;
 using Microsoft.Maui.Graphics;
+using Newtonsoft.Json.Linq;
 
 namespace DiscordIan.Helper
 {
@@ -35,21 +37,30 @@ namespace DiscordIan.Helper
 
         private async static Task<byte[]> GetImageData(Uri uri)
         {
-            byte[] imageBytes;
+            HttpResponseMessage response;
 
-            try
+            using (var client = new HttpClient())
+                response = await client.GetAsync(uri);
+
+            if (!response.IsSuccessStatusCode)
             {
-                using (var webClient = new WebClient())
+                var responseStr = await response.Content.ReadAsStringAsync();
+
+                var jobj = JObject.Parse(responseStr);
+
+                if (jobj != null && jobj.Count > 0)
                 {
-                    imageBytes = await webClient.DownloadDataTaskAsync(uri);
+                    var message = jobj["message"].ToString(); 
+                    if (!string.IsNullOrEmpty(message))
+                    {
+                        throw new Exception(message);
+                    }
                 }
 
-                return imageBytes;
+                throw new Exception(responseStr);
             }
-            catch (Exception ex)
-            {
-                throw new Exception(ex.Message);
-            }
+
+            return await response.Content.ReadAsByteArrayAsync();
         }
 
         private static Point DetermineStartPoint(int rows, int selection, Size cellSize)

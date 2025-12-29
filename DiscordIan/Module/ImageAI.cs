@@ -89,9 +89,7 @@ namespace DiscordIan.Module
                     try
                     {
                         msg.Request.Seed = new Random().Next(1, 99999).ToString();
-                        msg.Request.Model = model == "flux" || model == "turbo" || model == "gptimage"
-                            ? model
-                            : msg.Request.Model;
+                        msg.Request.Model = Extensions.IsNullOrEmptyReplace(model, msg.Request.Model);
 
                         await CallImageService(msg.Request, Context.Message);
                     }
@@ -244,7 +242,7 @@ namespace DiscordIan.Module
         {
             var model = new ImgRequestModel { Prompt = prompt };
             var seedMatch = new Regex("-seed [0-9]{1,10}", RegexOptions.IgnoreCase).Match(prompt);
-            var modelMatch = new Regex("-model (flux|turbo|gptimage)", RegexOptions.IgnoreCase).Match(prompt);
+            var modelMatch = new Regex("-model ([a-zA-Z0-9])", RegexOptions.IgnoreCase).Match(prompt);
 
             if (seedMatch.Success)
             {
