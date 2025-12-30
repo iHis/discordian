@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.IO;
 using System.Net;
 using System.Net.Http;
@@ -10,9 +11,10 @@ namespace DiscordIan.Helper
 {
     public static class ImageHelper
     {
-        public async static Task<byte[]> GetImageFromURI(Uri uri)
+        public async static Task<byte[]> GetImageFromURI(Uri uri,
+            IDictionary<string, string> headers = null)
         {
-            return await GetImageData(uri);
+            return await GetImageData(uri, headers);
         }
 
         //public static Bitmap ClipComicSection(Bitmap image, Tuple<int, int> layout, int selection)
@@ -35,12 +37,23 @@ namespace DiscordIan.Helper
         //    return image.CropImage(rect).TrimWhiteSpace();
         //}
 
-        private async static Task<byte[]> GetImageData(Uri uri)
+        private async static Task<byte[]> GetImageData(Uri uri,
+            IDictionary<string, string> headers = null)
         {
             HttpResponseMessage response;
 
             using (var client = new HttpClient())
+            {
+                if (headers?.Count > 0)
+                {
+                    foreach (var header in headers)
+                    {
+                        client.DefaultRequestHeaders.Add(header.Key, header.Value);
+                    }
+                }
+
                 response = await client.GetAsync(uri);
+            }
 
             if (!response.IsSuccessStatusCode)
             {
@@ -50,7 +63,7 @@ namespace DiscordIan.Helper
 
                 if (jobj != null && jobj.Count > 0)
                 {
-                    var message = jobj["message"].ToString(); 
+                    var message = jobj?["error"]?["message"]?.ToString(); 
                     if (!string.IsNullOrEmpty(message))
                     {
                         throw new Exception(message);

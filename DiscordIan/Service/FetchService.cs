@@ -4,6 +4,7 @@ using System.Diagnostics;
 using System.Drawing;
 using System.IO;
 using System.Net.Http;
+using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Xml.Serialization;
 using DiscordIan.Helper;
@@ -77,13 +78,14 @@ namespace DiscordIan.Service
             }
         }
 
-        public async Task<Response<byte[]>> GetImageAsync(Uri requestUri)
+        public async Task<Response<byte[]>> GetImageAsync(Uri requestUri,
+            IDictionary<string, string> headers = null)
         {
             var stopwatch = Stopwatch.StartNew();
             var response = new Response<byte[]>();
             try
             {
-                var imageResult = await ImageHelper.GetImageFromURI(requestUri);
+                var imageResult = await ImageHelper.GetImageFromURI(requestUri, headers);
                 if (imageResult == null)
                 {
                     _logger.LogWarning("Image Fetch failed.");

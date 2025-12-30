@@ -206,9 +206,12 @@ namespace DiscordIan.Module
             var url = string.Format(_options.PollinationsAIEndpoint,
                 Uri.EscapeDataString(request.Prompt),
                 request.Model,
-                request.Seed);
+                request.Seed,
+                _options.PollinationsAIKey);
 
-            var response = await _fetchService.GetImageAsync(new Uri(url));
+            var header = new Dictionary<string, string> { { "Authorization", $"Bearer {_options.PollinationsAIKey}" } };
+
+            var response = await _fetchService.GetImageAsync(new Uri(url), header);
             apiTiming += response.Elapsed;
 
             if (response.IsSuccessful)
@@ -242,7 +245,7 @@ namespace DiscordIan.Module
         {
             var model = new ImgRequestModel { Prompt = prompt };
             var seedMatch = new Regex("-seed [0-9]{1,10}", RegexOptions.IgnoreCase).Match(prompt);
-            var modelMatch = new Regex("-model ([a-zA-Z0-9])", RegexOptions.IgnoreCase).Match(prompt);
+            var modelMatch = new Regex("-model ([a-zA-Z0-9]+)", RegexOptions.IgnoreCase).Match(prompt);
 
             if (seedMatch.Success)
             {
