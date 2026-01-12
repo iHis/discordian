@@ -63,7 +63,7 @@ namespace DiscordIan.Helper
 
                 if (jobj != null && jobj.Count > 0)
                 {
-                    var message = jobj?["error"]?["message"]?.ToString(); 
+                    var message = jobj?["error"]?["message"]?.ToString() ?? jobj?["message"]?.ToString(); 
                     if (!string.IsNullOrEmpty(message))
                     {
                         throw new Exception(message);

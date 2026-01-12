@@ -130,7 +130,8 @@ namespace DiscordIan.Module
                     m.Author.Id == _client.CurrentUser.Id
                     && (m.Embeds.Any()
                         && (m.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
-                    || m.Reference != null);
+                    || m.Reference != null
+                    || m.Content.StartsWith("Mirrored from"));
 
                 model.ChannelId = message?.Channel?.Id ?? 0;
                 model.MessageId = message?.Id ?? 0;
@@ -143,6 +144,8 @@ namespace DiscordIan.Module
 
                 if (message != null)
                 {
+                    await SendToChannel(_options.NopeImageChannel, message);
+
                     await channel.DeleteMessageAsync(model.MessageId);
                 }
             }
@@ -231,7 +234,7 @@ namespace DiscordIan.Module
                         $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}")
                     : await channel.SendFileAsync(stream, "image.jpeg", messageReference: messageReference);
                 
-                ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
+                await ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
             }
             else
             {
@@ -267,7 +270,7 @@ namespace DiscordIan.Module
             return model;
         }
 
-        private async void ImgCache(IDistributedCache _cache, ulong userId, ulong channelId, ulong messageId, ImgRequestModel request)
+        private async Task ImgCache(IDistributedCache _cache, ulong userId, ulong channelId, ulong messageId, ImgRequestModel request)
         {
             var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, channelId));
             var item = new ImgCacheModel
@@ -293,6 +296,35 @@ namespace DiscordIan.Module
 
                 await _cache.SetStringAsync(string.Format(Cache.ImgAi, channelId),
                     JsonConvert.SerializeObject(cache));
+            }
+        }
+
+        private async Task SendToChannel(string channelName, IMessage message)
+        {
+            var channel = _client.Guilds
+                .First(g => g.Id == Context.Guild.Id)
+                .Channels
+                .FirstOrDefault(c => c.Name.Equals(channelName, StringComparison.OrdinalIgnoreCase));
+            if (channel is ISocketMessageChannel msgChannel)
+            {
+                await SendToChannel(msgChannel.Id, message);
+            }
+        }
+
+        private async Task SendToChannel(ulong channelId, IMessage message)
+        {
+            if (_client.GetChannel(channelId) is ISocketMessageChannel channel
+                && Context.Channel.Id != channel.Id)
+            {
+                var msgUrl = message.Attachments?.FirstOrDefault()?.Url;
+
+                if (!string.IsNullOrEmpty(msgUrl))
+                {
+                    var bytes = await ImageHelper.GetImageFromURI(new Uri(msgUrl));
+
+                    using var stream = new MemoryStream(bytes);
+                    await channel.SendFileAsync(stream, "image.jpeg", $"Mirrored from <#{Context.Channel.Id}> (requested by {Context.User.Mention})");
+                }
             }
         }
     }

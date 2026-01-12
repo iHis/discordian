@@ -35,5 +35,6 @@
         public string MeteoSourceKey { get; set; }
         public string PollinationsAIEndpoint { get; set; }
         public string PollinationsAIKey { get; set; }
+        public string NopeImageChannel { get; set; }
     }
 }
