@@ -63,10 +63,11 @@ namespace DiscordIan.Helper
 
                 if (jobj != null && jobj.Count > 0)
                 {
-                    var message = jobj?["error"]?["message"]?.ToString() ?? jobj?["message"]?.ToString(); 
-                    if (!string.IsNullOrEmpty(message))
+                    var message = jobj?["error"]?["message"]?.ToString(); 
+                    if (!string.IsNullOrEmpty(message) 
+                        && JObject.Parse(message) is JObject innerMessage)
                     {
-                        throw new Exception(message);
+                        throw new Exception(innerMessage?["message"]?.ToString() ?? message);
                     }
                 }
 
