@@ -97,10 +97,14 @@ namespace DiscordIan.Service
                 context.User.Username,
                 context.Message);
 
+            var typingToken = context.Channel.EnterTypingState();
+
             // Perform the execution of the command. In this method,
             // the command service will perform precondition and parsing check
             // then execute the command if one is matched.
             await _commands.ExecuteAsync(context, argPos, _services);
+
+            typingToken.Dispose();
         }
 
         public async Task CommandExecutedAsync(Optional<CommandInfo> command,

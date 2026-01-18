@@ -2,6 +2,8 @@
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
+using System.Text.Encodings.Web;
 using System.Text.RegularExpressions;
 using System.Threading.Channels;
 using System.Threading.Tasks;
@@ -51,6 +53,16 @@ namespace DiscordIan.Module
             {
                 await ReplyAsync("Prick.");
                 return;
+            }
+
+            var image = new List<IAttachment>()
+                .Concat(Context.Message.ReferencedMessage?.Attachments ?? [])
+                .Concat(Context.Message.Attachments)
+                .FirstOrDefault();
+
+            if (!prompt.Contains("-image") && image != null)
+            {
+                prompt += $" -image {image.Url}";
             }
 
             var model = ParseCommandArgs(prompt);
@@ -212,6 +224,11 @@ namespace DiscordIan.Module
                 request.Seed,
                 _options.PollinationsAIKey);
 
+            if (!string.IsNullOrEmpty(request.ImageUrl))
+            {
+                url += $"&image={request.ImageUrl}";
+            }
+
             var header = new Dictionary<string, string> { { "Authorization", $"Bearer {_options.PollinationsAIKey}" } };
 
             var response = await _fetchService.GetImageAsync(new Uri(url), header);
@@ -249,6 +266,7 @@ namespace DiscordIan.Module
             var model = new ImgRequestModel { Prompt = prompt };
             var seedMatch = new Regex("-seed [0-9]{1,10}", RegexOptions.IgnoreCase).Match(prompt);
             var modelMatch = new Regex("-model ([a-zA-Z0-9]+)", RegexOptions.IgnoreCase).Match(prompt);
+            var imageMatch = new Regex("-image ([^\\s]+)", RegexOptions.IgnoreCase).Match(prompt);
 
             if (seedMatch.Success)
             {
@@ -260,6 +278,12 @@ namespace DiscordIan.Module
             {
                 model.Model = modelMatch.Value.Split(' ')[1];
                 model.Prompt = model.Prompt.Replace(modelMatch.Value, string.Empty).Trim();
+            }
+
+            if (imageMatch.Success)
+            {
+                model.ImageUrl = WebUtility.UrlEncode(imageMatch.Value.Split(' ')[1]);
+                model.Prompt = model.Prompt.Replace(imageMatch.Value, string.Empty).Trim();
             }
 
             if (model.Prompt.Contains("-model") || model.Prompt.Contains("-seed"))
