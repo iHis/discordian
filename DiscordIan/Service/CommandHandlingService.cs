@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Linq;
 using System.Reflection;
+using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 using Discord;
 using Discord.Commands;
@@ -74,19 +75,22 @@ namespace DiscordIan.Service
 
             // This value holds the offset where the prefix ends
             var argPos = 0;
-            // Perform prefix check. You may want to replace this with
-            // (!message.HasCharPrefix('!', ref argPos))
-            // for a more traditional command format like !help.
+
             if (!message.HasMentionPrefix(_discord.CurrentUser, ref argPos)
                 && _options.IanCommandChar?.Length == 1
                 && !message.HasCharPrefix(_options.IanCommandChar[0], ref argPos))
-            //if (string.IsNullOrEmpty(message.Content)
-            //   || !message.Content.StartsWith(_options.IanCommandChar))
             {
                 return;
             }
 
             var context = new SocketCommandContext(_discord, message);
+            var command = new Regex($"{_options.IanCommandChar[0]}([^\\s]+)", RegexOptions.IgnoreCase).Match(context.Message.Content);
+            var search = _commands.Search(context, argPos);
+
+            if (!search.IsSuccess)
+            {
+                return;
+            }
 
             if (!context.Message.Content.StartsWith("!again")) 
             {
@@ -97,14 +101,10 @@ namespace DiscordIan.Service
                 context.User.Username,
                 context.Message);
 
-            var typingToken = context.Channel.EnterTypingState();
-
-            // Perform the execution of the command. In this method,
-            // the command service will perform precondition and parsing check
-            // then execute the command if one is matched.
-            await _commands.ExecuteAsync(context, argPos, _services);
-
-            typingToken.Dispose();
+            using (context.Channel.EnterTypingState())
+            {
+                await _commands.ExecuteAsync(context, argPos, _services);
+            }
         }
 
         public async Task CommandExecutedAsync(Optional<CommandInfo> command,
