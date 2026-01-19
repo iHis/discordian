@@ -236,10 +236,10 @@ namespace DiscordIan.Module
                     var models = string.IsNullOrEmpty(model)
                         ? [.. _options.PollinationsAIBalanceModels.Split(',')]
                         : new List<string> { model };
-                    var refreshTime = DateTime.Today.AddHours(17).AddMinutes(45);
-                    var remaining = (refreshTime - DateTime.Now).TotalSeconds > 0
-                        ? (refreshTime - DateTime.Now).TotalSeconds
-                        : (refreshTime.AddDays(1) - DateTime.Now).TotalSeconds;
+                    var refreshTime = DateTime.Today.AddHours(23).AddMinutes(45);
+                    var remaining = (refreshTime - DateTime.UtcNow).TotalSeconds > 0
+                        ? (refreshTime - DateTime.UtcNow).TotalSeconds
+                        : (refreshTime.AddDays(1) - DateTime.UtcNow).TotalSeconds;
                     var untilRefresh = TimeSpan.FromSeconds(remaining);
 
                     if (modelResponse.IsSuccessful
