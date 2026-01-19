@@ -169,11 +169,11 @@ namespace DiscordIan.Module
 
         private Embed FormatBookResponse(Item response)
         {
-            string titleUrl = Extensions.IsNullOrEmptyReplace(
+            string titleUrl = UtilityExtensions.IsNullOrEmptyReplace(
                 response.VolumeInfo.PreviewLink.ValidateUri(),
                 string.Empty);
 
-            string description = Extensions.IsNullOrEmptyReplace(
+            string description = UtilityExtensions.IsNullOrEmptyReplace(
                 response.VolumeInfo.Description,
                 "No description available.");
 
@@ -186,11 +186,11 @@ namespace DiscordIan.Module
                 string.Join(", ", response.VolumeInfo.Authors)
                 : "N/A";
 
-            string publishDate = Extensions.IsNullOrEmptyReplace(
+            string publishDate = UtilityExtensions.IsNullOrEmptyReplace(
                 response.VolumeInfo.PublishedDate,
                 "N/A");
 
-            string thumb = Extensions.IsNullOrEmptyReplace(
+            string thumb = UtilityExtensions.IsNullOrEmptyReplace(
                 response.VolumeInfo.ImageLinks.SmallThumbnail.ValidateUri(),
                 string.Empty);
 

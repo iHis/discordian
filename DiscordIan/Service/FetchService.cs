@@ -47,7 +47,7 @@ namespace DiscordIan.Service
                     }
                 }
                 var httpResult = await _httpClient.GetAsync(requestUri);
-                //var test = httpResult.Content.ReadAsStringAsync().Result;
+                //Console.WriteLine(httpResult.Content.ReadAsStringAsync().Result);
                 if (!httpResult.IsSuccessStatusCode)
                 {
                     _logger.LogWarning("Fetch failed with HTTP status {HttpStats} on request {RequestURI}",

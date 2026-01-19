@@ -36,5 +36,8 @@
         public string PollinationsAIEndpoint { get; set; }
         public string PollinationsAIKey { get; set; }
         public string NopeImageChannel { get; set; }
+        public string PollinationsAIBalanceEndpoint { get; set; }
+        public string PollinationsAIModelsEndpoint { get; set; }
+        public string PollinationsAIBalanceModels { get; set; }
     }
 }

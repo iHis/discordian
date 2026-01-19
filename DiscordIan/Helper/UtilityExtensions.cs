@@ -14,7 +14,7 @@ using Newtonsoft.Json;
 
 namespace DiscordIan.Helper
 {
-    public static class Extensions
+    public static class UtilityExtensions
     {
         public static string IsNullOrEmptyReplace(this string str, string replace)
         {

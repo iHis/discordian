@@ -18,6 +18,7 @@ using DiscordIan.Service;
 using Microsoft.Extensions.Caching.Distributed;
 using Microsoft.Extensions.Options;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace DiscordIan.Module
 {
@@ -101,7 +102,7 @@ namespace DiscordIan.Module
                     try
                     {
                         msg.Request.Seed = new Random().Next(1, 99999).ToString();
-                        msg.Request.Model = Extensions.IsNullOrEmptyReplace(model, msg.Request.Model);
+                        msg.Request.Model = UtilityExtensions.IsNullOrEmptyReplace(model, msg.Request.Model);
 
                         await CallImageService(msg.Request, Context.Message);
                     }
@@ -213,6 +214,59 @@ namespace DiscordIan.Module
                         await CallImageService(model, Context.Message, QuakeChannel);
                     }
                 }
+            }
+        }
+
+        [Command("imgbalance", RunMode = RunMode.Async)]
+        [Summary("Get account credit balance.")]
+        [Alias("ib")]
+        public async Task ImageBalance([Summary("Model")] string model = null)
+        {
+            try
+            {
+                var header = new Dictionary<string, string> { { "Authorization", $"Bearer {_options.PollinationsAIKey}" } };
+                var balanceResponse = await _fetchService.GetAsync<JObject>(new Uri(_options.PollinationsAIBalanceEndpoint), header);
+
+                if (balanceResponse.IsSuccessful
+                    && balanceResponse.Data is JObject obj
+                    && obj["balance"] != null)
+                {
+                    var balance = obj["balance"].ToObject<decimal>();
+                    var modelResponse = await _fetchService.GetAsync<List<PollinationModels>>(new Uri(_options.PollinationsAIModelsEndpoint));
+                    var models = string.IsNullOrEmpty(model)
+                        ? [.. _options.PollinationsAIBalanceModels.Split(',')]
+                        : new List<string> { model };
+                    var refreshTime = DateTime.Today.AddHours(17).AddMinutes(45);
+                    var remaining = (refreshTime - DateTime.Now).TotalSeconds > 0
+                        ? (refreshTime - DateTime.Now).TotalSeconds
+                        : (refreshTime.AddDays(1) - DateTime.Now).TotalSeconds;
+                    var untilRefresh = TimeSpan.FromSeconds(remaining);
+
+                    if (modelResponse.IsSuccessful
+                         && modelResponse.Data != null)
+                    {
+                        var modelInfo = modelResponse.Data
+                            .Where(m => models.Contains(m.name, StringComparer.OrdinalIgnoreCase))
+                            .OrderBy(m => m.pricing.completionImageTokens)
+                            .ThenBy(m => m.name)
+                            .Select(m => $"{m.name}: {Math.Floor(balance / (decimal)m.pricing.completionImageTokens)} images")
+                            .ToList();
+
+                        await ReplyAsync($"Pollinations credit balance: {Math.Floor(balance * 100)}%\n" +
+                            string.Join("\n", modelInfo) +
+                            "\n\n" +
+                            $"Credits refresh in {untilRefresh.Hours}h {untilRefresh.Minutes}m");
+                    }
+                    else
+                    {
+                        await ReplyAsync($"Account balance: {Math.Floor(balance * 100)}%\n" +
+                            "Could not retrieve model information.");
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(ex.Message);
             }
         }
 
