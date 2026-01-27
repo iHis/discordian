@@ -56,14 +56,14 @@ namespace DiscordIan.Module
                 return;
             }
 
-            var image = new List<IAttachment>()
+            var images = new List<IAttachment>()
                 .Concat(Context.Message.ReferencedMessage?.Attachments ?? [])
                 .Concat(Context.Message.Attachments)
-                .FirstOrDefault();
+                .Take(4);
 
-            if (!prompt.Contains("-image") && image != null)
+            if (!prompt.Contains("-image") && images.Count() > 0)
             {
-                prompt += $" -image {image.Url}";
+                prompt += $" -image {string.Join("|", images.Select(i => i.Url))}";
             }
 
             var model = ParseCommandArgs(prompt);
@@ -338,6 +338,11 @@ namespace DiscordIan.Module
             {
                 model.ImageUrl = WebUtility.UrlEncode(imageMatch.Value.Split(' ')[1]);
                 model.Prompt = model.Prompt.Replace(imageMatch.Value, string.Empty).Trim();
+
+                if (!modelMatch.Success)
+                {
+                    model.Model = "klein";
+                }
             }
 
             if (model.Prompt.Contains("-model") || model.Prompt.Contains("-seed"))
