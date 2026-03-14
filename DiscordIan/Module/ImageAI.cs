@@ -389,7 +389,7 @@ namespace DiscordIan.Module
                 model.ImageUrl = WebUtility.UrlEncode(imageMatch.Value.Split(' ')[1]);
                 model.Prompt = model.Prompt.Replace(imageMatch.Value, string.Empty).Trim();
 
-                if (!modelMatch.Success)
+                if (!modelMatch.Success && type == AIType.Image)
                 {
                     model.Model = "klein";
                 }
