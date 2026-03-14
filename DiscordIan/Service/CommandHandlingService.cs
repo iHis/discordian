@@ -101,10 +101,7 @@ namespace DiscordIan.Service
                 context.User.Username,
                 context.Message);
 
-            using (context.Channel.EnterTypingState())
-            {
-                await _commands.ExecuteAsync(context, argPos, _services);
-            }
+            await _commands.ExecuteAsync(context, argPos, _services);
         }
 
         public async Task CommandExecutedAsync(Optional<CommandInfo> command,

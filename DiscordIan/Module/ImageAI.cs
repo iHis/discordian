@@ -78,6 +78,40 @@ namespace DiscordIan.Module
             }
         }
 
+        [Command("vidai", RunMode = RunMode.Async)]
+        [Summary("Generate AI video.")]
+        [Alias("vid")]
+        public async Task AIGeneratedVideo([Remainder]
+            [Summary("Prompt")] string prompt)
+        {
+            if (Context.User.IsNaughty())
+            {
+                await ReplyAsync("Prick.");
+                return;
+            }
+
+            var images = new List<IAttachment>()
+                .Concat(Context.Message.ReferencedMessage?.Attachments ?? [])
+                .Concat(Context.Message.Attachments)
+                .Take(4);
+
+            if (!prompt.Contains("-image") && images.Count() > 0)
+            {
+                prompt += $" -image {string.Join("|", images.Select(i => i.Url))}";
+            }
+
+            var model = ParseCommandArgs(prompt, AIType.Video);
+
+            try
+            {
+                await CallImageService(model, Context.Message, type: AIType.Video);
+            }
+            catch (Exception ex)
+            {
+                await ReplyAsync(ex.Message);
+            }
+        }
+
         [Command("imgnext", RunMode = RunMode.Async)]
         [Summary("Run again with new seed.")]
         public async Task GetAnotherImage([Summary("Model")] string model = null)
@@ -270,9 +304,21 @@ namespace DiscordIan.Module
             }
         }
 
-        private async Task CallImageService(ImgRequestModel request, SocketUserMessage origMsg, ulong? channelId = null)
+        private async Task CallImageService(ImgRequestModel request, SocketUserMessage origMsg, ulong? channelId = null, AIType type = AIType.Image)
         {
-            var url = string.Format(_options.PollinationsAIEndpoint,
+            var endpoint = type switch
+            {
+                AIType.Image => _options.PollinationsAIEndpoint,
+                AIType.Video => _options.PollinationsAIVideoEndpoint
+            };
+
+            var fileName = type switch
+            {
+                AIType.Video => "video.mp4",
+                AIType.Image => "image.jpeg"
+            };
+
+            var url = string.Format(endpoint,
                 Uri.EscapeDataString(request.Prompt),
                 request.Model,
                 request.Seed,
@@ -301,9 +347,9 @@ namespace DiscordIan.Module
                 var message = messageReference.ChannelId != 0
                     ? await channel.SendFileAsync(
                         stream,
-                        "image.jpeg",
+                        fileName,
                         $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}")
-                    : await channel.SendFileAsync(stream, "image.jpeg", messageReference: messageReference);
+                    : await channel.SendFileAsync(stream, fileName, messageReference: messageReference);
                 
                 await ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
             }
@@ -315,7 +361,7 @@ namespace DiscordIan.Module
             HistoryAdd(_cache, GetType().Name, request.Prompt, apiTiming);
         }
 
-        private ImgRequestModel ParseCommandArgs(string prompt)
+        private ImgRequestModel ParseCommandArgs(string prompt, AIType type = AIType.Image)
         {
             var model = new ImgRequestModel { Prompt = prompt };
             var seedMatch = new Regex("-seed [0-9]{1,10}", RegexOptions.IgnoreCase).Match(prompt);
@@ -332,6 +378,10 @@ namespace DiscordIan.Module
             {
                 model.Model = modelMatch.Value.Split(' ')[1];
                 model.Prompt = model.Prompt.Replace(modelMatch.Value, string.Empty).Trim();
+            }
+            else if (type == AIType.Video)
+            {
+                model.Model = "grok-video";
             }
 
             if (imageMatch.Success)

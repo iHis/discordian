@@ -39,5 +39,6 @@
         public string PollinationsAIBalanceEndpoint { get; set; }
         public string PollinationsAIModelsEndpoint { get; set; }
         public string PollinationsAIBalanceModels { get; set; }
+        public string PollinationsAIVideoEndpoint { get; set; }
     }
 }
