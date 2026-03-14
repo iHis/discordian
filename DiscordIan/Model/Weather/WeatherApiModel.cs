@@ -165,13 +165,13 @@ namespace DiscordIan.Model.Weather
         public int DailyWillItRain { get; set; }
 
         [JsonProperty("daily_chance_of_rain")]
-        public int DailyChanceOfRain { get; set; }
+        public double DailyChanceOfRain { get; set; }
 
         [JsonProperty("daily_will_it_snow")]
         public int DailyWillItSnow { get; set; }
 
         [JsonProperty("daily_chance_of_snow")]
-        public int DailyChanceOfSnow { get; set; }
+        public double DailyChanceOfSnow { get; set; }
 
         [JsonProperty("condition")]
         public Condition Condition { get; set; }
@@ -282,13 +282,13 @@ namespace DiscordIan.Model.Weather
         public int WillItRain { get; set; }
 
         [JsonProperty("chance_of_rain")]
-        public int ChanceOfRain { get; set; }
+        public double ChanceOfRain { get; set; }
 
         [JsonProperty("will_it_snow")]
         public int WillItSnow { get; set; }
 
         [JsonProperty("chance_of_snow")]
-        public int ChanceOfSnow { get; set; }
+        public double ChanceOfSnow { get; set; }
 
         [JsonProperty("vis_km")]
         public double VisKm { get; set; }

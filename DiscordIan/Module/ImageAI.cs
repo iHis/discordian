@@ -135,7 +135,7 @@ namespace DiscordIan.Module
                 {
                     try
                     {
-                        msg.Request.Seed = new Random().Next(1, 99999).ToString();
+                        msg.Request.Seed = "-1";
                         msg.Request.Model = UtilityExtensions.IsNullOrEmptyReplace(model, msg.Request.Model);
 
                         await CallImageService(msg.Request, Context.Message);
@@ -175,10 +175,10 @@ namespace DiscordIan.Module
                     .FirstOrDefault()
                     .FirstOrDefault(m =>
                     m.Author.Id == _client.CurrentUser.Id
-                    && (m.Embeds.Any()
+                    && ((m.Embeds.Any()
                         && (m.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
                     || m.Reference != null
-                    || m.Content.StartsWith("Mirrored from"));
+                    || m.Content.StartsWith("Mirrored from")));
 
                 model.ChannelId = message?.Channel?.Id ?? 0;
                 model.MessageId = message?.Id ?? 0;
