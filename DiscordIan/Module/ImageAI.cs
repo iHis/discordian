@@ -447,17 +447,14 @@ namespace DiscordIan.Module
         private async Task SendToChannel(ulong channelId, IMessage message)
         {
             if (_client.GetChannel(channelId) is ISocketMessageChannel channel
-                && Context.Channel.Id != channel.Id)
+                && Context.Channel.Id != channel.Id
+                && message.Attachments?.FirstOrDefault() is IAttachment msg
+                && !string.IsNullOrEmpty(msg.Url))
             {
-                var msgUrl = message.Attachments?.FirstOrDefault()?.Url;
+                var bytes = await ImageHelper.GetImageFromURI(new Uri(msg.Url));
 
-                if (!string.IsNullOrEmpty(msgUrl))
-                {
-                    var bytes = await ImageHelper.GetImageFromURI(new Uri(msgUrl));
-
-                    using var stream = new MemoryStream(bytes);
-                    await channel.SendFileAsync(stream, "image.jpeg", $"Mirrored from <#{Context.Channel.Id}> (requested by {Context.User.Mention})");
-                }
+                using var stream = new MemoryStream(bytes);
+                await channel.SendFileAsync(stream, msg.Filename, $"Mirrored from <#{Context.Channel.Id}> (requested by {Context.User.Mention})");
             }
         }
     }
