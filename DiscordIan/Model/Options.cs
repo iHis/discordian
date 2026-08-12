@@ -33,12 +33,12 @@
         public string WeatherApiKey { get; set; }
         public string MeteoSourceEndpoint { get; set; }
         public string MeteoSourceKey { get; set; }
-        public string PollinationsAIEndpoint { get; set; }
-        public string PollinationsAIKey { get; set; }
-        public string NopeImageChannel { get; set; }
-        public string PollinationsAIBalanceEndpoint { get; set; }
-        public string PollinationsAIModelsEndpoint { get; set; }
-        public string PollinationsAIBalanceModels { get; set; }
-        public string PollinationsAIVideoEndpoint { get; set; }
+        //public string PollinationsAIEndpoint { get; set; }
+        //public string PollinationsAIKey { get; set; }
+        //public string NopeImageChannel { get; set; }
+        //public string PollinationsAIBalanceEndpoint { get; set; }
+        //public string PollinationsAIModelsEndpoint { get; set; }
+        //public string PollinationsAIBalanceModels { get; set; }
+        //public string PollinationsAIVideoEndpoint { get; set; }
     }
 }

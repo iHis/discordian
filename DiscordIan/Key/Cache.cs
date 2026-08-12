@@ -10,7 +10,7 @@
         public static readonly string BookList = "book.{0}";
         public static readonly string Quote = "quote.{0}";
         public static readonly string History = "history";
-        public static readonly string ImgAi = "imgai.{0}";
+        //public static readonly string ImgAi = "imgai.{0}";
         public static readonly string Weather = "weather.{0}";
         public static readonly string PreviousCommand = "prevCmd.{0}";
     }

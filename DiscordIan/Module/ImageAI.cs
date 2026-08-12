@@ -44,418 +44,418 @@ namespace DiscordIan.Module
                 ?? throw new ArgumentNullException(nameof(client));
         }
 
-        [Command("imgai", RunMode = RunMode.Async)]
-        [Summary("Generate AI image.")]
-        [Alias("img")]
-        public async Task AIGeneratedImage([Remainder]
-            [Summary("Prompt")] string prompt)
-        {
-            if (Context.User.IsNaughty())
-            {
-                await ReplyAsync("Prick.");
-                return;
-            }
+        //[Command("imgai", RunMode = RunMode.Async)]
+        //[Summary("Generate AI image.")]
+        //[Alias("img")]
+        //public async Task AIGeneratedImage([Remainder]
+        //    [Summary("Prompt")] string prompt)
+        //{
+        //    if (Context.User.IsNaughty())
+        //    {
+        //        await ReplyAsync("Prick.");
+        //        return;
+        //    }
 
-            var images = new List<IAttachment>()
-                .Concat(Context.Message.ReferencedMessage?.Attachments ?? [])
-                .Concat(Context.Message.Attachments)
-                .Take(4);
+        //    var images = new List<IAttachment>()
+        //        .Concat(Context.Message.ReferencedMessage?.Attachments ?? [])
+        //        .Concat(Context.Message.Attachments)
+        //        .Take(4);
 
-            if (!prompt.Contains("-image") && images.Count() > 0)
-            {
-                prompt += $" -image {string.Join("|", images.Select(i => i.Url))}";
-            }
+        //    if (!prompt.Contains("-image") && images.Count() > 0)
+        //    {
+        //        prompt += $" -image {string.Join("|", images.Select(i => i.Url))}";
+        //    }
 
-            var model = ParseCommandArgs(prompt);
+        //    var model = ParseCommandArgs(prompt);
 
-            try
-            {
-                await CallImageService(model, Context.Message);
-            }
-            catch (Exception ex)
-            {
-                await ReplyAsync(ex.Message);
-            }
-        }
+        //    try
+        //    {
+        //        await CallImageService(model, Context.Message);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        await ReplyAsync(ex.Message);
+        //    }
+        //}
 
-        [Command("vidai", RunMode = RunMode.Async)]
-        [Summary("Generate AI video.")]
-        [Alias("vid")]
-        public async Task AIGeneratedVideo([Remainder]
-            [Summary("Prompt")] string prompt)
-        {
-            if (Context.User.IsNaughty())
-            {
-                await ReplyAsync("Prick.");
-                return;
-            }
+        //[Command("vidai", RunMode = RunMode.Async)]
+        //[Summary("Generate AI video.")]
+        //[Alias("vid")]
+        //public async Task AIGeneratedVideo([Remainder]
+        //    [Summary("Prompt")] string prompt)
+        //{
+        //    if (Context.User.IsNaughty())
+        //    {
+        //        await ReplyAsync("Prick.");
+        //        return;
+        //    }
 
-            var images = new List<IAttachment>()
-                .Concat(Context.Message.ReferencedMessage?.Attachments ?? [])
-                .Concat(Context.Message.Attachments)
-                .Take(4);
+        //    var images = new List<IAttachment>()
+        //        .Concat(Context.Message.ReferencedMessage?.Attachments ?? [])
+        //        .Concat(Context.Message.Attachments)
+        //        .Take(4);
 
-            if (!prompt.Contains("-image") && images.Count() > 0)
-            {
-                prompt += $" -image {string.Join("|", images.Select(i => i.Url))}";
-            }
+        //    if (!prompt.Contains("-image") && images.Count() > 0)
+        //    {
+        //        prompt += $" -image {string.Join("|", images.Select(i => i.Url))}";
+        //    }
 
-            var model = ParseCommandArgs(prompt, AIType.Video);
+        //    var model = ParseCommandArgs(prompt, AIType.Video);
 
-            try
-            {
-                await CallImageService(model, Context.Message, type: AIType.Video);
-            }
-            catch (Exception ex)
-            {
-                await ReplyAsync(ex.Message);
-            }
-        }
+        //    try
+        //    {
+        //        await CallImageService(model, Context.Message, type: AIType.Video);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        await ReplyAsync(ex.Message);
+        //    }
+        //}
 
-        [Command("imgnext", RunMode = RunMode.Async)]
-        [Summary("Run again with new seed.")]
-        public async Task GetAnotherImage([Summary("Model")] string model = null)
-        {
-            if (Context.User.IsNaughty())
-            {
-                await ReplyAsync("Prick.");
-                return;
-            }
+        //[Command("imgnext", RunMode = RunMode.Async)]
+        //[Summary("Run again with new seed.")]
+        //public async Task GetAnotherImage([Summary("Model")] string model = null)
+        //{
+        //    if (Context.User.IsNaughty())
+        //    {
+        //        await ReplyAsync("Prick.");
+        //        return;
+        //    }
 
-            var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
+        //    var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
 
-            if (cache != default)
-            {
-                var userId = Context.User.Id;
-                var channelId = Context.Channel.Id;
+        //    if (cache != default)
+        //    {
+        //        var userId = Context.User.Id;
+        //        var channelId = Context.Channel.Id;
 
-                var msg = cache.OrderByDescending(l => l.Timestamp).FirstOrDefault(l => l.ChannelId == channelId);
+        //        var msg = cache.OrderByDescending(l => l.Timestamp).FirstOrDefault(l => l.ChannelId == channelId);
 
-                if (msg != null)
-                {
-                    try
-                    {
-                        msg.Request.Seed = "-1";
-                        msg.Request.Model = UtilityExtensions.IsNullOrEmptyReplace(model, msg.Request.Model);
+        //        if (msg != null)
+        //        {
+        //            try
+        //            {
+        //                msg.Request.Seed = "-1";
+        //                msg.Request.Model = UtilityExtensions.IsNullOrEmptyReplace(model, msg.Request.Model);
 
-                        await CallImageService(msg.Request, Context.Message);
-                    }
-                    catch (Exception ex)
-                    {
-                        await ReplyAsync(ex.Message);
-                    }
-                }
-            }
-        }
+        //                await CallImageService(msg.Request, Context.Message);
+        //            }
+        //            catch (Exception ex)
+        //            {
+        //                await ReplyAsync(ex.Message);
+        //            }
+        //        }
+        //    }
+        //}
 
-        [Command("imgdel", RunMode = RunMode.Async)]
-        [Summary("Delete last AI image.")]
-        [Alias("nope")]
-        public async Task DeleteLastImage()
-        {
-            var messageRef = Context.Message.ReferencedMessage;
-            var model = new ImgCacheModel();
+        //[Command("imgdel", RunMode = RunMode.Async)]
+        //[Summary("Delete last AI image.")]
+        //[Alias("nope")]
+        //public async Task DeleteLastImage()
+        //{
+        //    var messageRef = Context.Message.ReferencedMessage;
+        //    var model = new ImgCacheModel();
 
-            if (messageRef != null)
-            {
-                if (messageRef.Author.Id == _client.CurrentUser.Id
-                    && ((messageRef.Embeds.Any()
-                        && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
-                    || messageRef.Reference != null))
-                {
-                    model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id };
-                }
-            }
-            else
-            {
-                var messages = await Context.Channel
-                    .GetMessagesAsync()
-                    .ToListAsync();
-                var message = messages
-                    .FirstOrDefault()
-                    .FirstOrDefault(m =>
-                    m.Author.Id == _client.CurrentUser.Id
-                    && ((m.Embeds.Any()
-                        && (m.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
-                    || m.Reference != null
-                    || m.Content.StartsWith("Mirrored from")));
+        //    if (messageRef != null)
+        //    {
+        //        if (messageRef.Author.Id == _client.CurrentUser.Id
+        //            && ((messageRef.Embeds.Any()
+        //                && (messageRef.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
+        //            || messageRef.Reference != null))
+        //        {
+        //            model = new ImgCacheModel { ChannelId = messageRef.Channel.Id, MessageId = messageRef.Id };
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var messages = await Context.Channel
+        //            .GetMessagesAsync()
+        //            .ToListAsync();
+        //        var message = messages
+        //            .FirstOrDefault()
+        //            .FirstOrDefault(m =>
+        //            m.Author.Id == _client.CurrentUser.Id
+        //            && ((m.Embeds.Any()
+        //                && (m.Embeds.First().Title?.StartsWith("Prompt:") ?? false))
+        //            || m.Reference != null
+        //            || m.Content.StartsWith("Mirrored from")));
 
-                model.ChannelId = message?.Channel?.Id ?? 0;
-                model.MessageId = message?.Id ?? 0;
-            }
+        //        model.ChannelId = message?.Channel?.Id ?? 0;
+        //        model.MessageId = message?.Id ?? 0;
+        //    }
 
-            if (model != null && model.MessageId != 0)
-            {
-                var channel = _client.GetChannel(model.ChannelId) as ITextChannel;
-                var message = await channel.GetMessageAsync(model.MessageId);
+        //    if (model != null && model.MessageId != 0)
+        //    {
+        //        var channel = _client.GetChannel(model.ChannelId) as ITextChannel;
+        //        var message = await channel.GetMessageAsync(model.MessageId);
 
-                if (message != null)
-                {
-                    await SendToChannel(_options.NopeImageChannel, message);
+        //        if (message != null)
+        //        {
+        //            await SendToChannel(_options.NopeImageChannel, message);
 
-                    await channel.DeleteMessageAsync(model.MessageId);
-                }
-            }
-        }
+        //            await channel.DeleteMessageAsync(model.MessageId);
+        //        }
+        //    }
+        //}
 
-        [Command("imgsend", RunMode = RunMode.Async)]
-        [Summary("Send image from image channel to primary channel.")]
-        public async Task ImageSend()
-        {
-            if (Context.User.IsNaughty())
-            {
-                await ReplyAsync("Prick.");
-                return;
-            }
+        //[Command("imgsend", RunMode = RunMode.Async)]
+        //[Summary("Send image from image channel to primary channel.")]
+        //public async Task ImageSend()
+        //{
+        //    if (Context.User.IsNaughty())
+        //    {
+        //        await ReplyAsync("Prick.");
+        //        return;
+        //    }
 
-            if (Context.Channel.Id != ImgChannel)
-            {
-                return;
-            }
+        //    if (Context.Channel.Id != ImgChannel)
+        //    {
+        //        return;
+        //    }
 
-            var messageRef = Context.Message.ReferencedMessage;
+        //    var messageRef = Context.Message.ReferencedMessage;
 
-            if (messageRef != null)
-            {
-                if (messageRef.Author.Id == _client.CurrentUser.Id && messageRef.ReferencedMessage != null)
-                {
-                    var user = await Context.Channel.GetUserByID(Context.User.Id);
+        //    if (messageRef != null)
+        //    {
+        //        if (messageRef.Author.Id == _client.CurrentUser.Id && messageRef.ReferencedMessage != null)
+        //        {
+        //            var user = await Context.Channel.GetUserByID(Context.User.Id);
 
-                    var prompt = $"{messageRef.Content}\nSender: {user.Nickname ?? user.Username}";
-                    var embed = new EmbedBuilder
-                    {
-                        Title = prompt,
-                        ImageUrl = messageRef.Attachments.First().Url
-                    };
+        //            var prompt = $"{messageRef.Content}\nSender: {user.Nickname ?? user.Username}";
+        //            var embed = new EmbedBuilder
+        //            {
+        //                Title = prompt,
+        //                ImageUrl = messageRef.Attachments.First().Url
+        //            };
 
-                    var quake = _client.GetChannel(QuakeChannel) as ISocketMessageChannel;
+        //            var quake = _client.GetChannel(QuakeChannel) as ISocketMessageChannel;
 
-                    await quake.SendMessageAsync("", false, embed.Build());
+        //            await quake.SendMessageAsync("", false, embed.Build());
 
-                    return;
-                }
-            }
-            else
-            {
-                var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
+        //            return;
+        //        }
+        //    }
+        //    else
+        //    {
+        //        var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, Context.Channel.Id));
 
-                if (cache != default)
-                {
-                    var model = cache.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id)?.Request;
+        //        if (cache != default)
+        //        {
+        //            var model = cache.FirstOrDefault(l => l.UserId == Context.User.Id && l.ChannelId == Context.Channel.Id)?.Request;
 
-                    if (model != null && !string.IsNullOrEmpty(model.Prompt))
-                    {
-                        await CallImageService(model, Context.Message, QuakeChannel);
-                    }
-                }
-            }
-        }
+        //            if (model != null && !string.IsNullOrEmpty(model.Prompt))
+        //            {
+        //                await CallImageService(model, Context.Message, QuakeChannel);
+        //            }
+        //        }
+        //    }
+        //}
 
-        [Command("imgbalance", RunMode = RunMode.Async)]
-        [Summary("Get account credit balance.")]
-        [Alias("ib")]
-        public async Task ImageBalance([Summary("Model")] string model = null)
-        {
-            try
-            {
-                var header = new Dictionary<string, string> { { "Authorization", $"Bearer {_options.PollinationsAIKey}" } };
-                var balanceResponse = await _fetchService.GetAsync<JObject>(new Uri(_options.PollinationsAIBalanceEndpoint), header);
+        //[Command("imgbalance", RunMode = RunMode.Async)]
+        //[Summary("Get account credit balance.")]
+        //[Alias("ib")]
+        //public async Task ImageBalance([Summary("Model")] string model = null)
+        //{
+        //    try
+        //    {
+        //        var header = new Dictionary<string, string> { { "Authorization", $"Bearer {_options.PollinationsAIKey}" } };
+        //        var balanceResponse = await _fetchService.GetAsync<JObject>(new Uri(_options.PollinationsAIBalanceEndpoint), header);
 
-                if (balanceResponse.IsSuccessful
-                    && balanceResponse.Data is JObject obj
-                    && obj["balance"] != null)
-                {
-                    var balance = obj["balance"].ToObject<decimal>();
-                    var modelResponse = await _fetchService.GetAsync<List<PollinationModels>>(new Uri(_options.PollinationsAIModelsEndpoint));
-                    var models = string.IsNullOrEmpty(model)
-                        ? [.. _options.PollinationsAIBalanceModels.Split(',')]
-                        : new List<string> { model };
-                    var refreshTime = DateTime.Today.AddHours(23).AddMinutes(45);
-                    var remaining = (refreshTime - DateTime.UtcNow).TotalSeconds > 0
-                        ? (refreshTime - DateTime.UtcNow).TotalSeconds
-                        : (refreshTime.AddDays(1) - DateTime.UtcNow).TotalSeconds;
-                    var untilRefresh = TimeSpan.FromSeconds(remaining);
+        //        if (balanceResponse.IsSuccessful
+        //            && balanceResponse.Data is JObject obj
+        //            && obj["balance"] != null)
+        //        {
+        //            var balance = obj["balance"].ToObject<decimal>();
+        //            var modelResponse = await _fetchService.GetAsync<List<PollinationModels>>(new Uri(_options.PollinationsAIModelsEndpoint));
+        //            var models = string.IsNullOrEmpty(model)
+        //                ? [.. _options.PollinationsAIBalanceModels.Split(',')]
+        //                : new List<string> { model };
+        //            var refreshTime = DateTime.Today.AddHours(23).AddMinutes(45);
+        //            var remaining = (refreshTime - DateTime.UtcNow).TotalSeconds > 0
+        //                ? (refreshTime - DateTime.UtcNow).TotalSeconds
+        //                : (refreshTime.AddDays(1) - DateTime.UtcNow).TotalSeconds;
+        //            var untilRefresh = TimeSpan.FromSeconds(remaining);
 
-                    if (modelResponse.IsSuccessful
-                         && modelResponse.Data != null)
-                    {
-                        var modelInfo = modelResponse.Data
-                            .Where(m => models.Contains(m.name, StringComparer.OrdinalIgnoreCase))
-                            .OrderBy(m => m.pricing.completionImageTokens)
-                            .ThenBy(m => m.name)
-                            .Select(m => $"{m.name}: {Math.Floor(balance / (decimal)m.pricing.completionImageTokens)} images")
-                            .ToList();
+        //            if (modelResponse.IsSuccessful
+        //                 && modelResponse.Data != null)
+        //            {
+        //                var modelInfo = modelResponse.Data
+        //                    .Where(m => models.Contains(m.name, StringComparer.OrdinalIgnoreCase))
+        //                    .OrderBy(m => m.pricing.completionImageTokens)
+        //                    .ThenBy(m => m.name)
+        //                    .Select(m => $"{m.name}: {Math.Floor(balance / (decimal)m.pricing.completionImageTokens)} images")
+        //                    .ToList();
 
-                        await ReplyAsync($"Pollinations credit balance: {Math.Floor(balance * 100)}%\n" +
-                            string.Join("\n", modelInfo) +
-                            "\n\n" +
-                            $"Credits refresh in {untilRefresh.Hours}h {untilRefresh.Minutes}m");
-                    }
-                    else
-                    {
-                        await ReplyAsync($"Account balance: {Math.Floor(balance * 100)}%\n" +
-                            "Could not retrieve model information.");
-                    }
-                }
-            }
-            catch (Exception ex)
-            {
-                await ReplyAsync(ex.Message);
-            }
-        }
+        //                await ReplyAsync($"Pollinations credit balance: {Math.Floor(balance * 100)}%\n" +
+        //                    string.Join("\n", modelInfo) +
+        //                    "\n\n" +
+        //                    $"Credits refresh in {untilRefresh.Hours}h {untilRefresh.Minutes}m");
+        //            }
+        //            else
+        //            {
+        //                await ReplyAsync($"Account balance: {Math.Floor(balance * 100)}%\n" +
+        //                    "Could not retrieve model information.");
+        //            }
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        await ReplyAsync(ex.Message);
+        //    }
+        //}
 
-        private async Task CallImageService(ImgRequestModel request, SocketUserMessage origMsg, ulong? channelId = null, AIType type = AIType.Image)
-        {
-            var endpoint = type switch
-            {
-                AIType.Image => _options.PollinationsAIEndpoint,
-                AIType.Video => _options.PollinationsAIVideoEndpoint
-            };
+        //private async Task CallImageService(ImgRequestModel request, SocketUserMessage origMsg, ulong? channelId = null, AIType type = AIType.Image)
+        //{
+        //    var endpoint = type switch
+        //    {
+        //        AIType.Image => _options.PollinationsAIEndpoint,
+        //        AIType.Video => _options.PollinationsAIVideoEndpoint
+        //    };
 
-            var fileName = type switch
-            {
-                AIType.Video => "video.mp4",
-                AIType.Image => "image.jpeg"
-            };
+        //    var fileName = type switch
+        //    {
+        //        AIType.Video => "video.mp4",
+        //        AIType.Image => "image.jpeg"
+        //    };
 
-            var url = string.Format(endpoint,
-                Uri.EscapeDataString(request.Prompt),
-                request.Model,
-                request.Seed,
-                _options.PollinationsAIKey);
+        //    var url = string.Format(endpoint,
+        //        Uri.EscapeDataString(request.Prompt),
+        //        request.Model,
+        //        request.Seed,
+        //        _options.PollinationsAIKey);
 
-            if (!string.IsNullOrEmpty(request.ImageUrl))
-            {
-                url += $"&image={request.ImageUrl}";
-            }
+        //    if (!string.IsNullOrEmpty(request.ImageUrl))
+        //    {
+        //        url += $"&image={request.ImageUrl}";
+        //    }
 
-            var header = new Dictionary<string, string> { { "Authorization", $"Bearer {_options.PollinationsAIKey}" } };
+        //    var header = new Dictionary<string, string> { { "Authorization", $"Bearer {_options.PollinationsAIKey}" } };
 
-            var response = await _fetchService.GetImageAsync(new Uri(url), header);
-            apiTiming += response.Elapsed;
+        //    var response = await _fetchService.GetImageAsync(new Uri(url), header);
+        //    apiTiming += response.Elapsed;
 
-            if (response.IsSuccessful)
-            {
-                var channel = channelId != null
-                    ? _client.GetChannel((ulong)channelId) as ISocketMessageChannel
-                    : Context.Channel;
-                var user = await Context.Channel.GetUserByName(Context.User.Username);
+        //    if (response.IsSuccessful)
+        //    {
+        //        var channel = channelId != null
+        //            ? _client.GetChannel((ulong)channelId) as ISocketMessageChannel
+        //            : Context.Channel;
+        //        var user = await Context.Channel.GetUserByName(Context.User.Username);
                 
-                using var stream = new MemoryStream(response.Data);
+        //        using var stream = new MemoryStream(response.Data);
 
-                var messageReference = new MessageReference(Context.Message.Id);
-                var message = messageReference.ChannelId != 0
-                    ? await channel.SendFileAsync(
-                        stream,
-                        fileName,
-                        $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}")
-                    : await channel.SendFileAsync(stream, fileName, messageReference: messageReference);
+        //        var messageReference = new MessageReference(Context.Message.Id);
+        //        var message = messageReference.ChannelId != 0
+        //            ? await channel.SendFileAsync(
+        //                stream,
+        //                fileName,
+        //                $"Prompt: {request.Prompt}\nModel: {request.Model}{(channelId != null ? $"\nSender: {user.Nickname ?? user.Username}" : "")}")
+        //            : await channel.SendFileAsync(stream, fileName, messageReference: messageReference);
                 
-                await ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
-            }
-            else
-            {
-                await ReplyAsync($"API call unsuccessful: {response.Message}");
-            }
+        //        await ImgCache(_cache, Context.User.Id, channel.Id, message.Id, request);
+        //    }
+        //    else
+        //    {
+        //        await ReplyAsync($"API call unsuccessful: {response.Message}");
+        //    }
 
-            HistoryAdd(_cache, GetType().Name, request.Prompt, apiTiming);
-        }
+        //    HistoryAdd(_cache, GetType().Name, request.Prompt, apiTiming);
+        //}
 
-        private ImgRequestModel ParseCommandArgs(string prompt, AIType type = AIType.Image)
-        {
-            var model = new ImgRequestModel { Prompt = prompt };
-            var seedMatch = new Regex("-seed [0-9]{1,10}", RegexOptions.IgnoreCase).Match(prompt);
-            var modelMatch = new Regex("-model ([a-zA-Z0-9]+)", RegexOptions.IgnoreCase).Match(prompt);
-            var imageMatch = new Regex("-image ([^\\s]+)", RegexOptions.IgnoreCase).Match(prompt);
+        //private ImgRequestModel ParseCommandArgs(string prompt, AIType type = AIType.Image)
+        //{
+        //    var model = new ImgRequestModel { Prompt = prompt };
+        //    var seedMatch = new Regex("-seed [0-9]{1,10}", RegexOptions.IgnoreCase).Match(prompt);
+        //    var modelMatch = new Regex("-model ([a-zA-Z0-9]+)", RegexOptions.IgnoreCase).Match(prompt);
+        //    var imageMatch = new Regex("-image ([^\\s]+)", RegexOptions.IgnoreCase).Match(prompt);
 
-            if (seedMatch.Success)
-            {
-                model.Seed = seedMatch.Value.Split(' ')[1];
-                model.Prompt = model.Prompt.Replace(seedMatch.Value, string.Empty).Trim();
-            }
+        //    if (seedMatch.Success)
+        //    {
+        //        model.Seed = seedMatch.Value.Split(' ')[1];
+        //        model.Prompt = model.Prompt.Replace(seedMatch.Value, string.Empty).Trim();
+        //    }
 
-            if (modelMatch.Success)
-            {
-                model.Model = modelMatch.Value.Split(' ')[1];
-                model.Prompt = model.Prompt.Replace(modelMatch.Value, string.Empty).Trim();
-            }
-            else if (type == AIType.Video)
-            {
-                model.Model = "grok-video";
-            }
+        //    if (modelMatch.Success)
+        //    {
+        //        model.Model = modelMatch.Value.Split(' ')[1];
+        //        model.Prompt = model.Prompt.Replace(modelMatch.Value, string.Empty).Trim();
+        //    }
+        //    else if (type == AIType.Video)
+        //    {
+        //        model.Model = "grok-video";
+        //    }
 
-            if (imageMatch.Success)
-            {
-                model.ImageUrl = WebUtility.UrlEncode(imageMatch.Value.Split(' ')[1]);
-                model.Prompt = model.Prompt.Replace(imageMatch.Value, string.Empty).Trim();
+        //    if (imageMatch.Success)
+        //    {
+        //        model.ImageUrl = WebUtility.UrlEncode(imageMatch.Value.Split(' ')[1]);
+        //        model.Prompt = model.Prompt.Replace(imageMatch.Value, string.Empty).Trim();
 
-                if (!modelMatch.Success && type == AIType.Image)
-                {
-                    model.Model = "klein";
-                }
-            }
+        //        if (!modelMatch.Success && type == AIType.Image)
+        //        {
+        //            model.Model = "klein";
+        //        }
+        //    }
 
-            if (model.Prompt.Contains("-model") || model.Prompt.Contains("-seed"))
-            {
-                throw new ArgumentException("Invalid prompt format. Please use -model and -seed flags correctly.");
-            }
+        //    if (model.Prompt.Contains("-model") || model.Prompt.Contains("-seed"))
+        //    {
+        //        throw new ArgumentException("Invalid prompt format. Please use -model and -seed flags correctly.");
+        //    }
 
-            return model;
-        }
+        //    return model;
+        //}
 
-        private async Task ImgCache(IDistributedCache _cache, ulong userId, ulong channelId, ulong messageId, ImgRequestModel request)
-        {
-            var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, channelId));
-            var item = new ImgCacheModel
-            {
-                Timestamp = DateTime.Now,
-                UserId = userId,
-                ChannelId = channelId,
-                MessageId = messageId,
-                Request = request
-            };
+        //private async Task ImgCache(IDistributedCache _cache, ulong userId, ulong channelId, ulong messageId, ImgRequestModel request)
+        //{
+        //    var cache = await _cache.Deserialize<List<ImgCacheModel>>(string.Format(Cache.ImgAi, channelId));
+        //    var item = new ImgCacheModel
+        //    {
+        //        Timestamp = DateTime.Now,
+        //        UserId = userId,
+        //        ChannelId = channelId,
+        //        MessageId = messageId,
+        //        Request = request
+        //    };
 
-            if (cache == default)
-            {
-                var list = new List<ImgCacheModel> { item };
+        //    if (cache == default)
+        //    {
+        //        var list = new List<ImgCacheModel> { item };
 
-                await _cache.SetStringAsync(string.Format(Cache.ImgAi, channelId),
-                    JsonConvert.SerializeObject(list));
-            }
-            else
-            {
-                cache.RemoveAll(l => l.ChannelId == channelId && l.UserId == userId);
-                cache.Add(item);
+        //        await _cache.SetStringAsync(string.Format(Cache.ImgAi, channelId),
+        //            JsonConvert.SerializeObject(list));
+        //    }
+        //    else
+        //    {
+        //        cache.RemoveAll(l => l.ChannelId == channelId && l.UserId == userId);
+        //        cache.Add(item);
 
-                await _cache.SetStringAsync(string.Format(Cache.ImgAi, channelId),
-                    JsonConvert.SerializeObject(cache));
-            }
-        }
+        //        await _cache.SetStringAsync(string.Format(Cache.ImgAi, channelId),
+        //            JsonConvert.SerializeObject(cache));
+        //    }
+        //}
 
-        private async Task SendToChannel(string channelName, IMessage message)
-        {
-            var channel = _client.Guilds
-                .First(g => g.Id == Context.Guild.Id)
-                .Channels
-                .FirstOrDefault(c => c.Name.Equals(channelName, StringComparison.OrdinalIgnoreCase));
-            if (channel is ISocketMessageChannel msgChannel)
-            {
-                await SendToChannel(msgChannel.Id, message);
-            }
-        }
+        //private async Task SendToChannel(string channelName, IMessage message)
+        //{
+        //    var channel = _client.Guilds
+        //        .First(g => g.Id == Context.Guild.Id)
+        //        .Channels
+        //        .FirstOrDefault(c => c.Name.Equals(channelName, StringComparison.OrdinalIgnoreCase));
+        //    if (channel is ISocketMessageChannel msgChannel)
+        //    {
+        //        await SendToChannel(msgChannel.Id, message);
+        //    }
+        //}
 
-        private async Task SendToChannel(ulong channelId, IMessage message)
-        {
-            if (_client.GetChannel(channelId) is ISocketMessageChannel channel
-                && Context.Channel.Id != channel.Id
-                && message.Attachments?.FirstOrDefault() is IAttachment msg
-                && !string.IsNullOrEmpty(msg.Url))
-            {
-                var bytes = await ImageHelper.GetImageFromURI(new Uri(msg.Url));
+        //private async Task SendToChannel(ulong channelId, IMessage message)
+        //{
+        //    if (_client.GetChannel(channelId) is ISocketMessageChannel channel
+        //        && Context.Channel.Id != channel.Id
+        //        && message.Attachments?.FirstOrDefault() is IAttachment msg
+        //        && !string.IsNullOrEmpty(msg.Url))
+        //    {
+        //        var bytes = await ImageHelper.GetImageFromURI(new Uri(msg.Url));
 
-                using var stream = new MemoryStream(bytes);
-                await channel.SendFileAsync(stream, msg.Filename, $"Mirrored from <#{Context.Channel.Id}> (requested by {Context.User.Mention})");
-            }
-        }
+        //        using var stream = new MemoryStream(bytes);
+        //        await channel.SendFileAsync(stream, msg.Filename, $"Mirrored from <#{Context.Channel.Id}> (requested by {Context.User.Mention})");
+        //    }
+        //}
     }
 }
